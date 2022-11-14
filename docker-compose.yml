@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   stats-server:
-    build: ./statistics-service
+    build: stat-service
     image: stat-server
     ports:
       - "9090:9090"
@@ -23,13 +23,12 @@ services:
       - POSTGRES_PASSWORD=root
 
   ewm-service:
-    build: ./main-service
+    build: main-service
     image: ewm-service
     ports:
       - "8080:8080"
     depends_on:
       - ewm-db
-      - stats-db
     environment:
       - SERVER_PORT=8080
       - STATS-SERVER_URL=http://stats-server:9090
