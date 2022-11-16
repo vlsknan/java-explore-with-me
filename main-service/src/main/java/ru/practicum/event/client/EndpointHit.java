@@ -1,20 +1,16 @@
-package ru.practicum.model;
+package ru.practicum.event.client;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AccessLevel;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "hits")
-@Data
+@Getter
+@Setter
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EndpointHit {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id; //Идентификатор записи
     String app; //Идентификатор сервиса для которого записывается информация
     String uri; //URI для которого был осуществлен запрос
