@@ -10,13 +10,12 @@ import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.enums.EventSorting;
 import ru.practicum.event.client.StatClient;
-import ru.practicum.event.client.ViewStatDto;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.exception.model.NoAccessRights;
+import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.NotFoundException;
 import ru.practicum.user.model.dto.UserShortDto;
 import ru.practicum.user.model.mapper.UserMapper;
@@ -68,7 +67,6 @@ public class EventCommonServiceImpl implements EventCommonService {
                 events = repository.findEventWithoutCategoriesWithPaid(text, paid, rangeStart, rangeEnd, page);
             } else {
                 events = repository.findEventWithoutCategoriesWithoutPaid(text, rangeStart, rangeEnd, page);
-
             }
         }
         //добавить из статистики confirmedRequests и views
@@ -88,7 +86,7 @@ public class EventCommonServiceImpl implements EventCommonService {
             //добавить из статистики confirmedRequests и views
             return EventMapper.toEventFullDto(event, category, initiator, );
         }
-        throw new NoAccessRights("There are no rights to view the event with id=%s because it has not been published yet");//событие не опубликовано
+        throw new ConditionsNotMet("There are no rights to view the event with id=%s because it has not been published yet");//событие не опубликовано
     }
 
     private PageRequest pagination(int from, int size, EventSorting sort) {
@@ -96,9 +94,5 @@ public class EventCommonServiceImpl implements EventCommonService {
         return PageRequest.of(page, size, Sort.by(String.valueOf(sort)).descending());
     }
 
-    private int addView(Event event) {
-//        ViewStatDto viewStatDto = statClient.getView();
-//        return viewStatDto.getHits();
-    }
 
 }

@@ -1,4 +1,4 @@
-package ru.practicum.event.admin;
+package ru.practicum.event.admin.controller;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -7,10 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.event.model.Event;
+import ru.practicum.event.admin.service.EventAdminServiceImpl;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.request.model.dto.UpdateEventRequest;
 
+import javax.validation.Valid;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class EventAdminController {
-    final EventAdminService service;
+    final EventAdminServiceImpl service;
 
     /* Поиск событий с условиями
     users - список id пользователей, чьи события нужно найти

@@ -1,10 +1,11 @@
-package ru.practicum.compilation.common;
+package ru.practicum.compilation.common.controller;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.compilation.common.service.CompilationCommonServiceImpl;
 import ru.practicum.event.model.dto.EventShortOutDto;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompilationCommonController {
-    final CompilationCommonService service;
+    final CompilationCommonServiceImpl service;
 
     //Получение подборок событий
     @GetMapping

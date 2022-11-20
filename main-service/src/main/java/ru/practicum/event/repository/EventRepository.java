@@ -43,4 +43,10 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "and e.eventDate between ?2 and ?3 ")
     List<Event> findEventWithoutCategoriesWithoutPaid(String text, LocalDateTime rangeStart,
                                                       LocalDateTime rangeEnd, PageRequest page);
+
+    @Query("select e from Event e " +
+            "where e.initiator in (:users) and e.state in (:states) and e.category in (:categories) " +
+            "and e.eventDate between :rangeStart and :rangeEnd ")
+    List<Event> findAllByParam(int[] users, String[] states, int[] categories, LocalDateTime rangeStart,
+                               LocalDateTime rangeEnd, PageRequest page);
 }

@@ -1,6 +1,7 @@
 package ru.practicum.user.model.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.request.model.dto.NewUserRequest;
 import ru.practicum.user.model.User;
 import ru.practicum.user.model.dto.UserInDto;
 import ru.practicum.user.model.dto.UserOutDto;
@@ -27,6 +28,13 @@ public class UserMapper {
         return User.builder()
                 .name(userInDto.getName())
                 .email(userInDto.getEmail())
+                .build();
+    }
+
+    public static User toUser(NewUserRequest newUser) {
+        return User.builder()
+                .name(newUser.getName())
+                .email(newUser.getEmail())
                 .build();
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.user.admin;
+package ru.practicum.user.admin.controller;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.request.model.dto.NewUserRequest;
+import ru.practicum.user.admin.service.UserAdminServiceImpl;
 import ru.practicum.user.model.dto.UserOutDto;
 
 import javax.validation.Valid;
@@ -22,7 +23,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Validated
 public class UserAdminController {
-    final UserAdminService service;
+    final UserAdminServiceImpl service;
 
     //Получение информации о пользователях
     @GetMapping

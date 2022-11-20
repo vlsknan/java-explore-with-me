@@ -14,14 +14,14 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateEventRequest { //Данные для изменения информации о событии
-    @NotNull
-    int eventId; //Идентификатор события
+//    @NotNull
+//    int eventId; //Идентификатор события
     String annotation; //Краткое описание
     CategoryDto category;
     String description; //Полное описание события
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate; //Дата и время на которые намечено событие (в формате "yyyy-MM-dd HH:mm:ss")
-    boolean paid; //Нужно ли оплачивать участие
-    int participantLimit; //Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
+    Boolean paid; //Нужно ли оплачивать участие
+    Integer participantLimit; //Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
     String title; //Заголовок
 }

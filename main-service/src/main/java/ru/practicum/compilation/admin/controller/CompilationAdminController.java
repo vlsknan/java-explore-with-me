@@ -1,4 +1,4 @@
-package ru.practicum.compilation.admin;
+package ru.practicum.compilation.admin.controller;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.compilation.admin.service.CompilationAdminServiceImpl;
 import ru.practicum.compilation.model.dto.CompilationDto;
 import ru.practicum.compilation.model.dto.NewCompilationDto;
 
@@ -20,7 +21,7 @@ import javax.validation.Valid;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Validated
 public class CompilationAdminController {
-    final CompilationAdminService service;
+    final CompilationAdminServiceImpl service;
 
     //Добавление новой подборки
     @PostMapping
