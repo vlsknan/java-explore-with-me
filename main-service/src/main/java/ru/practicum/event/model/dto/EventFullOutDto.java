@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.model.dto.CategoryDto;
-import ru.practicum.enums.State;
+import ru.practicum.enums.StateEvent;
 import ru.practicum.event.model.Location;
 import ru.practicum.user.model.dto.UserShortDto;
 
@@ -32,7 +32,7 @@ public class EventFullOutDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime publishedOn; //Дата и время публикации события (в формате "yyyy-MM-dd HH:mm:ss")
     boolean requestModeration; //Нужна ли пре-модерация заявок на участие
-    State state; //Список состояний жизненного цикла события
+    StateEvent state; //Список состояний жизненного цикла события
     String title; //Заголовок
     int view; //Количество просмотров события
 }

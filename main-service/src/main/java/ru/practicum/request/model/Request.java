@@ -2,7 +2,8 @@ package ru.practicum.request.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.State;
+import ru.practicum.enums.StateEvent;
+import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
 
@@ -28,5 +29,5 @@ public class Request {
     @Column(name = "requester_id")
     User requester;
     @Enumerated(EnumType.STRING)
-    State status;
+    StatusRequest status;
 }

@@ -3,7 +3,7 @@ package ru.practicum.event.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.model.Category;
-import ru.practicum.enums.State;
+import ru.practicum.enums.StateEvent;
 import ru.practicum.user.model.User;
 
 import javax.persistence.*;
@@ -38,7 +38,7 @@ public class Event {
     int participantLimit;
     @Column(name = "published_on")
     LocalDateTime publishedOn;
-    State state;
+    StateEvent state;
     @Column(name = "location_latitude")
     float locationLatitude;
     @Column(name = "location_longitude")

@@ -13,6 +13,7 @@ import ru.practicum.user.admin.service.UserAdminServiceImpl;
 import ru.practicum.user.model.dto.UserOutDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class UserAdminController {
     @GetMapping
     public List<UserOutDto> findUserByConditions(@RequestParam int[] ids,
                                              @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                             @RequestParam(defaultValue = "10") int size) {
+                                             @RequestParam(defaultValue = "10") @Positive int size) {
         return service.findUserByConditions(ids, from, size);
     }
 
@@ -41,7 +42,7 @@ public class UserAdminController {
 
     //Удаление пользователя
     @DeleteMapping("/{userId}")
-    public ResponseEntity<HttpStatus> deleteUserById(@PathVariable int userId) {
+    public ResponseEntity<HttpStatus> deleteUserById(@Positive @PathVariable int userId) {
         service.delete(userId);
         return ResponseEntity.ok().build();
     }

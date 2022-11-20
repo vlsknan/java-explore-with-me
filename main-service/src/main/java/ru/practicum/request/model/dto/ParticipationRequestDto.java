@@ -5,7 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.State;
+import ru.practicum.enums.StateEvent;
+import ru.practicum.enums.StatusRequest;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -22,5 +23,5 @@ public class ParticipationRequestDto {
     int event; //Идентификатор события
     int requester; //Идентификатор пользователя, отправившего заявку
     @Enumerated(EnumType.STRING)
-    State status; //Статус заявки
+    StatusRequest status; //Статус заявки
 }

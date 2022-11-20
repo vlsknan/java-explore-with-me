@@ -43,7 +43,6 @@ public class UserAdminServiceImpl implements UserAdminService {
     public void delete(int userId) {
         User user = repository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id=%s was not found.", userId)));
-        log.error("Пользователь с id = {} не найден", userId);
         repository.delete(user);
         log.info("Пользователь с id = {} удален", userId);
     }

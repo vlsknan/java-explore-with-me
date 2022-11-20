@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.category.model.mapper.CategoryMapper;
-import ru.practicum.enums.State;
+import ru.practicum.enums.StateEvent;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
@@ -70,7 +70,7 @@ public class EventAdminServiceImpl implements EventAdminService {
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
         log.error("Событие с id = {} не найдено", eventId);
         if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
-            event.setState(State.PUBLISHED);
+            event.setState(StateEvent.PUBLISHED);
             log.info("Событие опубликовано");
             return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                     UserMapper.toUserShortDto(event.getInitiator()), );
@@ -84,7 +84,7 @@ public class EventAdminServiceImpl implements EventAdminService {
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
         log.error("Событие с id = {} не найдено", eventId);
         if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
-            event.setState(State.CANCELED);
+            event.setState(StateEvent.CANCELED);
             log.info("Событие отклонено");
             return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                     UserMapper.toUserShortDto(event.getInitiator()), );
