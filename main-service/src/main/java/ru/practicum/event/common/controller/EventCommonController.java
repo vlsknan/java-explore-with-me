@@ -15,6 +15,7 @@ import ru.practicum.event.model.dto.EventShortOutDto;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,15 +38,20 @@ public class EventCommonController {
                                              @RequestParam(defaultValue = "EVENT_DATE") EventSorting sort,
                                              @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                              @RequestParam(defaultValue = "10") @Positive int size,
-                                             HttpServletRequest request) {
-        statClient.post(request);
-        return service.findEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+                                             HttpServletRequest request) throws IOException {
+        statClient.sendStats(request);
+        List<EventShortOutDto> eventShortOutDto = service.findEvents(text, categories, paid, rangeStart,
+                rangeEnd, onlyAvailable, sort, from, size);
+        service.addViewsForEvents(eventShortOutDto);
+        return eventShortOutDto;
     }
 
     //Получение подробной информации об опубликованном событии по его id
     @GetMapping("/{id}")
-    public EventFullOutDto findEventById(@PathVariable int id, HttpServletRequest request) {
-        statClient.post(request);
-        return service.findEventById(id);
+    public EventFullOutDto findEventById(@PathVariable @Positive int id, HttpServletRequest request) throws IOException {
+        statClient.sendStats(request);
+        EventFullOutDto eventFullOutDto = service.findEventById(id);
+        service.addViewForEvent(eventFullOutDto);
+        return eventFullOutDto;
     }
 }

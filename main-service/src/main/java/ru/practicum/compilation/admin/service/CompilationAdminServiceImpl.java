@@ -11,16 +11,19 @@ import ru.practicum.compilation.model.dto.CompilationDto;
 import ru.practicum.compilation.model.dto.NewCompilationDto;
 import ru.practicum.compilation.model.mapper.CompilationMapper;
 import ru.practicum.compilation.repository.CompilationRepository;
+import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,15 +33,19 @@ import java.util.stream.Collectors;
 public class CompilationAdminServiceImpl implements CompilationAdminService{
     final CompilationRepository compilationRepository;
     final EventRepository eventRepository;
+    final RequestRepository requestRepository;
 
     public CompilationDto save(NewCompilationDto newCompilation) {
         List<Event> events = newCompilation.getEvents().stream()
                 .map(id -> eventRepository.findById(id).get())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); //получили каждое событие по id
+
         List<EventShortOutDto> eventShortOutDtos = events.stream()
-                .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
-                        UserMapper.toUserShortDto(e.getInitiator()), )) ////добавить из статистики confirmedRequests и views
-                .collect(Collectors.toList());
+                    .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
+                            UserMapper.toUserShortDto(e.getInitiator()),
+                            requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                    .collect(Collectors.toList());
+
         Compilation compilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilation, events));
         log.info("Новая подборка с id = {} сохранена", compilation.getId());
         return CompilationMapper.toCompilationDto(compilation, eventShortOutDtos);

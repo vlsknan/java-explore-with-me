@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.common.service.CompilationCommonServiceImpl;
+import ru.practicum.compilation.model.dto.CompilationDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class CompilationCommonController {
 
     //Получение подборок событий
     @GetMapping
-    public List<EventShortOutDto> findCompilation(@RequestParam(required = false) boolean pinned,
+    public List<CompilationDto> findCompilation(@RequestParam(required = false) boolean pinned,
                                                   @RequestParam(required = false, defaultValue = "0") int from,
                                                   @RequestParam(required = false, defaultValue = "10") int size) {
         log.info("");
@@ -29,7 +30,7 @@ public class CompilationCommonController {
 
     //Получение подборки событий по его id
     @GetMapping("/{compId}")
-    public List<EventShortOutDto> findCompilationById(@PathVariable int compId) {
+    public CompilationDto findCompilationById(@PathVariable int compId) {
         return service.findCompilationById(compId);
     }
 }

@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface CompilationRepository extends JpaRepository<Compilation, Integer> {
-    @Override
+
     List<Compilation> findAllByPinned(boolean pinned, PageRequest page);
 }

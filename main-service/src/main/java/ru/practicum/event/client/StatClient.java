@@ -3,36 +3,53 @@ package ru.practicum.event.client;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import ru.practicum.event.client.model.EndpointHit;
 
 import javax.servlet.http.HttpServletRequest;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
-import java.util.Map;
 
-import static org.springframework.http.RequestEntity.post;
-
-@FieldDefaults(level = AccessLevel.PROTECTED)
+@Service
 @RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class StatClient {
-    final RestTemplate rest;
+    final URI uri;
+    final HttpClient client = HttpClient.newHttpClient();
 
-    public ResponseEntity<Object> post(HttpServletRequest request) {
-        EndpointHit body = EndpointHit.builder()
-                .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
-                .app("main-service")
-                .timestamp(LocalDateTime.now()).build();
-        return (ResponseEntity<Object>) RequestEntity.post("/hits", body);
+    @Autowired
+    public StatClient(@Value("${stats-server.url}") String uriStr) {
+        this.uri = URI.create(uriStr + "/hit");
     }
 
-    public ViewStatDto getView(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique) {
-        Map<String, Object> parameters = Map.of("start", start,
-                "end", end,
-                "uris", uris,
-                "unique", unique);
-        return (ViewStatDto) RequestEntity.get("/stats", parameters);
+    public void sendStats(HttpServletRequest request) throws IOException {
+        try {
+            HttpRequest statRequest = HttpRequest.newBuilder()
+                    .uri(uri)
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .header("Accept", "text/html")
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(
+                            new EndpointHit(
+                                    null,
+                                    "main-server",
+                                    request.getRequestURI(),
+                                    request.getRemoteAddr(),
+                                    LocalDateTime.now()
+                            ).toString()))
+                    .build();
+            HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+            client.send(statRequest, handler);
+        } catch (IOException | InterruptedException ex) {
+            throw new IOException("Incorrect httpRequest");
+        }
     }
 }

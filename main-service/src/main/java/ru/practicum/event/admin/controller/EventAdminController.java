@@ -11,7 +11,7 @@ import ru.practicum.event.admin.service.EventAdminServiceImpl;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.request.model.dto.UpdateEventRequest;
 
-import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,15 +25,7 @@ import java.util.List;
 public class EventAdminController {
     final EventAdminServiceImpl service;
 
-    /* Поиск событий с условиями
-    users - список id пользователей, чьи события нужно найти
-    states список состояний в которых находятся искомые события
-    categories - список id категорий в которых будет вестись поиск
-    rangeStart - дата и время не раньше которых должно произойти событие
-    rangeEnd - дата и время не позже которых должно произойти событие
-    from - количество событий, которые нужно пропустить для формирования текущего набора
-    size - количество событий в наборе
-    */
+    //Поиск событий
     @GetMapping
     public List<EventFullOutDto> findByConditions(@RequestParam int[] users, @RequestParam String[] states ,
                                                   @RequestParam int[] categories,
@@ -48,19 +40,19 @@ public class EventAdminController {
 
     //Редактирование события
     @PutMapping("/{eventId}")
-    public EventFullOutDto updateEvent(@PathVariable int eventId, @RequestBody UpdateEventRequest updateEvent) {
+    public EventFullOutDto updateEvent(@PathVariable @Positive int eventId, @RequestBody UpdateEventRequest updateEvent) {
         return service.update(eventId, updateEvent);
     }
 
     //Публикация события
     @PatchMapping("/{eventId}/publish")
-    public EventFullOutDto publishEvent(@PathVariable int eventId) {
+    public EventFullOutDto publishEvent(@PathVariable @Positive int eventId) {
         return service.publishEvent(eventId);
     }
 
     //Отклонение события
     @PatchMapping("/{eventId}/reject")
-    public EventFullOutDto rejectEvent(@PathVariable int eventId) {
+    public EventFullOutDto rejectEvent(@PathVariable @Positive int eventId) {
         return service.rejectEvent(eventId);
     }
 }

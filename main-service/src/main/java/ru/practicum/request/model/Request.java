@@ -22,11 +22,11 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
     @ManyToOne
-    @Column(name = "event_id")
+    @JoinColumn(name = "event_id")
     Event event;
     LocalDateTime created;
     @ManyToOne
-    @Column(name = "requester_id")
+    @JoinColumn(name = "requester_id")
     User requester;
     @Enumerated(EnumType.STRING)
     StatusRequest status;

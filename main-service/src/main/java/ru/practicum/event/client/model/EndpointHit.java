@@ -1,4 +1,4 @@
-package ru.practicum.event.client;
+package ru.practicum.event.client.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
@@ -9,9 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EndpointHit {
-    int id; //Идентификатор записи
+    Integer id; //Идентификатор записи
     String app; //Идентификатор сервиса для которого записывается информация
     String uri; //URI для которого был осуществлен запрос
     String ip; //IP-адрес пользователя, осуществившего запрос

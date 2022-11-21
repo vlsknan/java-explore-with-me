@@ -2,6 +2,7 @@ package ru.practicum.event.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.category.model.Category;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.user.model.User;
@@ -22,13 +23,14 @@ public class Event {
     int id;
     String annotation;
     @ManyToOne
-    @Column(name = "category_id")
+    @JoinColumn(name = "category_id")
     Category category;
     @ManyToOne
     @JoinColumn(name = "initiator_id")
     User initiator;
     String title;
     @Column(name = "created_on")
+    @CreationTimestamp
     LocalDateTime createdOn;
     String description;
     @Column(name = "event_date")
@@ -45,4 +47,5 @@ public class Event {
     float locationLongitude;
     @Column(name = "request_moderation")
     boolean requestModeration;
+    int view;
 }

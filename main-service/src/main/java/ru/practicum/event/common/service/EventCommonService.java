@@ -9,8 +9,12 @@ import java.util.List;
 
 public interface EventCommonService {
     List<EventShortOutDto> findEvents(String text, int[] categories, Boolean paid, LocalDateTime rangeStart,
-                                             LocalDateTime rangeEnd, boolean onlyAvailable, EventSorting sort,
-                                             int from, int size);
+                                      LocalDateTime rangeEnd, boolean onlyAvailable, EventSorting sort,
+                                      int from, int size);
 
     EventFullOutDto findEventById(int id);
+
+    void addViewForEvent(EventFullOutDto eventFullOutDto);
+
+    void addViewsForEvents(List<EventShortOutDto> eventsShortDtos);
 }
