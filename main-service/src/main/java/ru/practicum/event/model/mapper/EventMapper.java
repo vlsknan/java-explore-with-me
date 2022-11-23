@@ -7,7 +7,7 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.event.model.dto.NewEventInDto;
+import ru.practicum.request.model.dto.NewEventInDto;
 import ru.practicum.user.model.User;
 import ru.practicum.user.model.dto.UserShortDto;
 

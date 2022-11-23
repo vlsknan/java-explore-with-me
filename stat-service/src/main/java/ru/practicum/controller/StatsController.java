@@ -6,8 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.EndpointHit;
-import ru.practicum.model.dto.ViewStatDto;
+import ru.practicum.model.ViewStats;
 import ru.practicum.service.StatService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,17 +21,17 @@ public class StatsController {
     @PostMapping("/hit")
     public ResponseEntity<HttpStatus> saveInfo(@RequestBody EndpointHit endpointHit) {
         statService.save(endpointHit);
-        log.info("Вызван метод saveInfo() в StatsController");
+        log.info("Сохранить информацию о том что к эндпоинты был запрос (StatsController)");
         return ResponseEntity.ok().build();
     }
 
     //Получение статистики по посещениям
     @GetMapping("/stats")
-    public ViewStatDto findStat(@RequestParam String start,
-                                @RequestParam String end,
-                                @RequestParam(required = false) String[] uris,
-                                @RequestParam(defaultValue = "false") boolean unique) {
-        log.info("Вызван метод findStat() в StatsController");
+    public List<ViewStats> findStat(@RequestParam String start,
+                                    @RequestParam String end,
+                                    @RequestParam(required = false) String[] uris,
+                                    @RequestParam(defaultValue = "false") boolean unique) {
+        log.info("Получить статистику по посещениям (StatsController)");
         return statService.findStat(start, end, uris, unique);
     }
 }

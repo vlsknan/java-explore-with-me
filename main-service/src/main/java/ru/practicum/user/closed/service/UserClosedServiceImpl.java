@@ -34,6 +34,7 @@ public class UserClosedServiceImpl implements UserClosedService {
     @Override
     public List<RequestDto> findByRequesterId(int userId) {
         findUserById(userId);
+        log.info("Получены все запросы на участие в событиях пользователя с id = {}", userId);
         return requestRepository.findAllByRequesterId(userId).stream()
                 .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
@@ -54,7 +55,7 @@ public class UserClosedServiceImpl implements UserClosedService {
                 .requester(requester)
                 .created(LocalDateTime.now())
                 .status(event.isRequestModeration() ? StatusRequest.PENDING : StatusRequest.CONFIRMED).build();
-        log.info("Запрос пользователя с id = {} на участие в событии с id = {} создан", userId, eventId);
+        log.info("Запрос пользователя с id = {} на участие в событии с id = {} добавлен", userId, eventId);
         return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
@@ -63,7 +64,7 @@ public class UserClosedServiceImpl implements UserClosedService {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException(String.format("Request with id=%s was not found.", requestId)));
         request.setStatus(StatusRequest.CANCELED);
-        log.info("Заявка пользователя с id = {} на участие в событии с id = {} отменена пользователем",
+        log.info("Запрос с id = {} пользователя с id = {} на участие отменен самим пользователем",
                 userId, request.getEvent().getId());
         return RequestMapper.toRequestDto(requestRepository.save(request));
     }

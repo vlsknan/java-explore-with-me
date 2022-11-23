@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Compilation { //Подборка событий
+public class Compilation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;

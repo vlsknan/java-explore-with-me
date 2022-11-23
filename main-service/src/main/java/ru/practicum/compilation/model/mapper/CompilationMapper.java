@@ -20,15 +20,6 @@ public class CompilationMapper {
                 .build();
     }
 
-    public static Compilation toCompilation(CompilationDto compilationDto, List<Event> events) {
-        return Compilation.builder()
-                .id(compilationDto.getId())
-                .title(compilationDto.getTitle())
-                .pinned(compilationDto.isPenned())
-                .events(events)
-                .build();
-    }
-
     public static Compilation toCompilation(NewCompilationDto newCompilationDto, List<Event> events) {
         return Compilation.builder()
                 .title(newCompilationDto.getTitle())

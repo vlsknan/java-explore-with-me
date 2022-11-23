@@ -7,7 +7,6 @@ import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.NotNull;
 
-//Данные нового пользователя
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

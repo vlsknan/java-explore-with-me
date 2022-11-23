@@ -48,6 +48,7 @@ public class StatClient {
                     .build();
             HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
             client.send(statRequest, handler);
+            log.info("Данные отправлены на сервер статистики");
         } catch (IOException | InterruptedException ex) {
             throw new IOException("Incorrect httpRequest");
         }

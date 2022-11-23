@@ -40,6 +40,7 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
         }
 
         List<EventShortOutDto> finalEvents = events;
+        log.info("Получили все подборки");
         return compilations.stream()
                 .map(c -> CompilationMapper.toCompilationDto(c, finalEvents))
                 .collect(Collectors.toList());
@@ -50,6 +51,7 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%s was not found.", compId)));
         List<EventShortOutDto> events = getEventShort(compilation);
+        log.info("получили подборки с if = {}", compId);
 
         return CompilationMapper.toCompilationDto(compilation, events);
     }
@@ -61,10 +63,10 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
 
     private List<EventShortOutDto> getEventShort(Compilation compilation) {
         List<EventShortOutDto> events = compilation.getEvents().stream()
-                    .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
-                            UserMapper.toUserShortDto(e.getInitiator()),
-                            requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
-                    .collect(Collectors.toList());
+                .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
+                        UserMapper.toUserShortDto(e.getInitiator()),
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                .collect(Collectors.toList());
         return events;
     }
 }

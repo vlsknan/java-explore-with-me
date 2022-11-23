@@ -40,6 +40,7 @@ public class EventCommonController {
                                              @RequestParam(defaultValue = "10") @Positive int size,
                                              HttpServletRequest request) throws IOException {
         statClient.sendStats(request);
+        log.info("Получить события с фильтрацией (EventCommonController)");
         List<EventShortOutDto> eventShortOutDto = service.findEvents(text, categories, paid, rangeStart,
                 rangeEnd, onlyAvailable, sort, from, size);
         service.addViewsForEvents(eventShortOutDto);
@@ -50,6 +51,7 @@ public class EventCommonController {
     @GetMapping("/{id}")
     public EventFullOutDto findEventById(@PathVariable @Positive int id, HttpServletRequest request) throws IOException {
         statClient.sendStats(request);
+        log.info("Получить полную информацию о событии с id = {} (EventCommonController)", id);
         EventFullOutDto eventFullOutDto = service.findEventById(id);
         service.addViewForEvent(eventFullOutDto);
         return eventFullOutDto;

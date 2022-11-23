@@ -23,15 +23,17 @@ import javax.validation.Valid;
 public class CategoryAdminController {
     final CategoryAdminServiceImpl service;
 
-    //Изменнение категории
+    //Изменение категории
     @PatchMapping
     public CategoryDto updateCategory(@Valid @RequestBody CategoryDto category) {
+        log.info("Изменить категорию с id = {} (CategoryAdminController)", category.getId());
         return service.update(category);
     }
 
     //Добавление новой категории
     @PostMapping
     public CategoryDto saveCategory(@Valid @RequestBody NewCategoryDto category) {
+        log.info("Добавить категорию с именем {} (CategoryAdminController)", category.getName());
         return service.save(category);
     }
 
@@ -39,6 +41,7 @@ public class CategoryAdminController {
     @DeleteMapping("/{catId}")
     public ResponseEntity<HttpStatus> deleteCategoryById(@PathVariable int catId) {
         service.delete(catId);
+        log.info("Удалить категорию с id = {} (CategoryAdminController)", catId);
         return ResponseEntity.ok().build();
     }
 }

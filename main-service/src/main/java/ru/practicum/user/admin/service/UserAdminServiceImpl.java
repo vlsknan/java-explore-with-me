@@ -27,6 +27,7 @@ public class UserAdminServiceImpl implements UserAdminService {
     public List<UserOutDto> findUserByConditions(int[] ids, int from, int size) {
         PageRequest page = pagination(from, size);
         List<User> users = repository.findAllById(ids, page);
+        log.info("Получен список пользователей");
         return users.stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
@@ -35,7 +36,7 @@ public class UserAdminServiceImpl implements UserAdminService {
     @Override
     public UserOutDto save(NewUserRequest newUser) {
         User user = UserMapper.toUser(newUser);
-        log.info("Пользователь с email = {} сохранен", user.getEmail());
+        log.info("Пользователь с электронной почтой '{}' сохранен", user.getEmail());
         return UserMapper.toUserDto(repository.save(user));
     }
 

@@ -23,14 +23,13 @@ import ru.practicum.user.model.mapper.UserMapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CompilationAdminServiceImpl implements CompilationAdminService{
+public class CompilationAdminServiceImpl implements CompilationAdminService {
     final CompilationRepository compilationRepository;
     final EventRepository eventRepository;
     final RequestRepository requestRepository;
@@ -38,13 +37,13 @@ public class CompilationAdminServiceImpl implements CompilationAdminService{
     public CompilationDto save(NewCompilationDto newCompilation) {
         List<Event> events = newCompilation.getEvents().stream()
                 .map(id -> eventRepository.findById(id).get())
-                .collect(Collectors.toList()); //получили каждое событие по id
+                .collect(Collectors.toList()); //получить каждое событие по id из новой подборки
 
         List<EventShortOutDto> eventShortOutDtos = events.stream()
-                    .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
-                            UserMapper.toUserShortDto(e.getInitiator()),
-                            requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
-                    .collect(Collectors.toList());
+                .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
+                        UserMapper.toUserShortDto(e.getInitiator()),
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                .collect(Collectors.toList());
 
         Compilation compilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilation, events));
         log.info("Новая подборка с id = {} сохранена", compilation.getId());
@@ -52,35 +51,37 @@ public class CompilationAdminServiceImpl implements CompilationAdminService{
     }
 
     public void deleteCompilation(int compId) {
-        Compilation compilation =  getCompilationById(compId);
+        Compilation compilation = findCompilationById(compId);
         compilationRepository.delete(compilation);
         log.info("Подборка с id = {} удалена", compId);
     }
 
     public void deleteEventOfCompilation(int compId, int eventId) {
-        Compilation compilation =  getCompilationById(compId);
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", compId)));
+        Compilation compilation = findCompilationById(compId);
+        Event event = findEventById(eventId);
+
         List<Event> events = new ArrayList<>(compilation.getEvents());
         events.remove(event);
         compilation.setEvents(events);
+
         compilationRepository.save(compilation);
         log.info("Из подборки с id = {} удалено событие с id = {}", compId, event);
     }
 
     public void addEventInCompilation(int compId, int eventId) {
-        Compilation compilation =  getCompilationById(compId);
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", compId)));
+        Compilation compilation = findCompilationById(compId);
+        Event event = findEventById(eventId);
+
         List<Event> events = new ArrayList<>(compilation.getEvents());
         events.add(event);
         compilation.setEvents(events);
+
         compilationRepository.save(compilation);
         log.info("В подборку с id = {} добавлено событие с id = {}", compId, event);
     }
 
     public void unpinCompilation(int compId) {
-        Compilation compilation = getCompilationById(compId);
+        Compilation compilation = findCompilationById(compId);
         if (compilation.isPinned()) {
             compilation.setPinned(false);
             log.info("Подборка с id = {} откреплена с главной страницы", compId);
@@ -89,7 +90,7 @@ public class CompilationAdminServiceImpl implements CompilationAdminService{
     }
 
     public void pinCompilation(int compId) {
-        Compilation compilation = getCompilationById(compId);
+        Compilation compilation = findCompilationById(compId);
         if (!compilation.isPinned()) {
             compilation.setPinned(true);
             log.info("Подборка с id = {} прикреплена на главную страницу", compId);
@@ -97,8 +98,14 @@ public class CompilationAdminServiceImpl implements CompilationAdminService{
         throw new ConditionsNotMet("The collection is already pinned on the main page.");
     }
 
-    private Compilation getCompilationById(int id) {
+    private Compilation findCompilationById(int id) {
         return compilationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%s was not found.", id)));
+    }
+
+    private Event findEventById(int eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
+
     }
 }

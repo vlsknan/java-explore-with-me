@@ -1,5 +1,6 @@
 package ru.practicum.event.admin.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -10,18 +11,19 @@ import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.model.QEvent;
 import ru.practicum.event.model.dto.EventFullOutDto;
+import ru.practicum.request.model.dto.UpdateEventRequest;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.exception.model.BadRequestException;
 import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.NotFoundException;
-import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,29 +46,28 @@ public class EventAdminServiceImpl implements EventAdminService {
     public List<EventFullOutDto> findByConditions(int[] users, String[] states, int[] categories, LocalDateTime rangeStart,
                                                   LocalDateTime rangeEnd, int from, int size) {
         PageRequest page = pagination(from, size);
-        List<Event> events = new ArrayList<>();
-        if (users.length != 0 && states.length != 0 && categories.length != 0) {
-            events = eventRepository.findAllByParam(users, states, categories, rangeStart, rangeEnd, page);
-        } else if (users.length == 0 && states.length != 0 && categories.length != 0) {
-            events = eventRepository.findAllWithoutUsers(states, categories, rangeStart, rangeEnd, page);
-        } else if (users.length != 0 && states.length == 0 && categories.length != 0) {
-            events = eventRepository.findAllWithoutState(users, categories, rangeStart, rangeEnd, page);
-        } else if (users.length != 0 && states.length != 0 && categories.length == 0) {
-            events = eventRepository.findAllWithoutCategory(users, states, rangeStart, rangeEnd, page);
-        }
 
-        List<EventFullOutDto> res = events.stream()
-                    .map(e -> EventMapper.toEventFullDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
-                            UserMapper.toUserShortDto(e.getInitiator()),
-                            requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
-                    .collect(Collectors.toList());
-        return res;
+        StateEvent[] stateEvents = null;
+        if (states != null) {
+            stateEvents = Arrays.stream(states)
+                    .map(this::mapToState)
+                    .toArray(StateEvent[]::new);
+        }
+        Optional<BooleanExpression> conditions = getFinalCondition(users, stateEvents, categories, rangeStart, rangeEnd);
+
+        log.info("События по определенным параметрам найдены");
+        return conditions
+                .map(c -> eventRepository.findAll(c, page).getContent())
+                .orElseGet(() -> eventRepository.findAll(page).getContent()).stream()
+                .map(e -> EventMapper.toEventFullDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
+                        UserMapper.toUserShortDto(e.getInitiator()),
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                .collect(Collectors.toList());
     }
 
     public EventFullOutDto update(int eventId, UpdateEventRequest updateEvent) {
         Event oldEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
-        log.error("Событие с id = {} не найдено", eventId);
         if (updateEvent.getAnnotation() != null) {
             oldEvent.setAnnotation(updateEvent.getAnnotation());
         }
@@ -89,6 +90,7 @@ public class EventAdminServiceImpl implements EventAdminService {
             oldEvent.setTitle(updateEvent.getTitle());
         }
         Event event = eventRepository.save(oldEvent);
+        log.info("Событие с id = {} изменено", eventId);
         return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                 UserMapper.toUserShortDto(event.getInitiator()),
                 requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
@@ -100,7 +102,7 @@ public class EventAdminServiceImpl implements EventAdminService {
         log.error("Событие с id = {} не найдено", eventId);
         if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
             event.setState(StateEvent.PUBLISHED);
-            log.info("Событие опубликовано");
+            log.info("Событие с id = {} опубликовано", eventId);
             return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                     UserMapper.toUserShortDto(event.getInitiator()),
                     requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
@@ -111,10 +113,9 @@ public class EventAdminServiceImpl implements EventAdminService {
     public EventFullOutDto rejectEvent(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
-        log.error("Событие с id = {} не найдено", eventId);
         if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
             event.setState(StateEvent.CANCELED);
-            log.info("Событие отклонено");
+            log.info("Событие с id = {} отклонено", eventId);
             return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                     UserMapper.toUserShortDto(event.getInitiator()),
                     requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
@@ -126,4 +127,43 @@ public class EventAdminServiceImpl implements EventAdminService {
         int page = from < size ? 0 : from / size;
         return PageRequest.of(page, size);
     }
+
+    private StateEvent mapToState(String state) {
+        try {
+            return StateEvent.valueOf(state);
+        } catch (BadRequestException e) {
+            throw new BadRequestException(String.format("State is unsupported: %s", state));
+        }
+    }
+
+    private Optional<BooleanExpression> getFinalCondition(int[] users, StateEvent[] states, int[] categories,
+                                                          LocalDateTime rangeStart, LocalDateTime rangeEnd) {
+        List<BooleanExpression> conditions = new ArrayList<>();
+        QEvent event = QEvent.event;
+
+        if (users != null) {
+            List<Integer> userIds = Arrays.stream(users)
+                    .mapToObj(Integer::valueOf)
+                    .collect(Collectors.toList());
+            conditions.add(event.initiator.id.in(userIds));
+        }
+        if (states != null) {
+            conditions.add(event.state.in(states));
+        }
+        if (categories != null) {
+            List<Integer> catIds = Arrays.stream(categories)
+                    .mapToObj(Integer::valueOf)
+                    .collect(Collectors.toList());
+            conditions.add(event.category.id.in(catIds));
+        }
+        if (rangeStart != null) {
+            conditions.add(event.eventDate.after(rangeStart));
+        }
+        if (rangeEnd != null) {
+            conditions.add(event.eventDate.before(rangeEnd));
+        }
+        return conditions.stream()
+                .reduce(BooleanExpression::and);
+    }
+
 }

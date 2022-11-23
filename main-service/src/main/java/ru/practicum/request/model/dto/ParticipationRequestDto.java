@@ -5,14 +5,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import java.time.LocalDateTime;
 
-//Заявка на участие в событии
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

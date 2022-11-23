@@ -2,8 +2,8 @@ package ru.practicum.event.closed.service;
 
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.event.model.dto.NewEventInDto;
-import ru.practicum.event.model.dto.UpdateEventRequest;
+import ru.practicum.request.model.dto.NewEventInDto;
+import ru.practicum.request.model.dto.UpdateEventRequest;
 import ru.practicum.request.model.dto.RequestDto;
 
 import java.util.List;

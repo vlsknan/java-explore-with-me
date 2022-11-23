@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.admin.service.EventAdminServiceImpl;
 import ru.practicum.event.model.dto.EventFullOutDto;
-import ru.practicum.event.model.dto.UpdateEventRequest;
+import ru.practicum.request.model.dto.UpdateEventRequest;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -27,32 +27,36 @@ public class EventAdminController {
 
     //Поиск событий
     @GetMapping
-    public List<EventFullOutDto> findByConditions(@RequestParam int[] users, @RequestParam String[] states ,
+    public List<EventFullOutDto> findByConditions(@RequestParam int[] users, @RequestParam String[] states,
                                                   @RequestParam int[] categories,
                                                   @RequestParam(required = false)
-                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                                   @RequestParam(required = false)
-                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                   @RequestParam(defaultValue = "10") int size) {
+        log.info("Поиск событий с фильтрацией (EventAdminController)");
         return service.findByConditions(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     //Редактирование события
     @PutMapping("/{eventId}")
     public EventFullOutDto updateEvent(@PathVariable @Positive int eventId, @RequestBody UpdateEventRequest updateEvent) {
+        log.info("Редактировать событие с id = {} (EventAdminController)", eventId);
         return service.update(eventId, updateEvent);
     }
 
     //Публикация события
     @PatchMapping("/{eventId}/publish")
     public EventFullOutDto publishEvent(@PathVariable @Positive int eventId) {
+        log.info("Опубликовать событие с id = {} (EventAdminController)", eventId);
         return service.publishEvent(eventId);
     }
 
     //Отклонение события
     @PatchMapping("/{eventId}/reject")
     public EventFullOutDto rejectEvent(@PathVariable @Positive int eventId) {
+        log.info("Отклонить событие с id = {} (EventAdminController)", eventId);
         return service.rejectEvent(eventId);
     }
 }

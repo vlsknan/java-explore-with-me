@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface CategoryCommonService {
     List<CategoryDto> findAll(int from, int size);
+
     CategoryDto findById(int catId);
 }

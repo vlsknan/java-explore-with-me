@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 
 import javax.persistence.EnumType;

@@ -2,7 +2,6 @@ package ru.practicum.request.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
