@@ -46,12 +46,12 @@ public class StatService {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         );
 
-        List<EndpointHit> endpointHits = new ArrayList<>();
+        List<EndpointHit> endpointHits;
         if (unique) {
             if (uris != null) {
                 endpointHits = statRepository.findAllUniqueByUri(startTime, endTime, uris);
             } else {
-                endpointHits = statRepository.findAll(startTime, endTime);
+                endpointHits = statRepository.findAllUnique(startTime, endTime);
             }
         } else {
             if (uris != null) {
