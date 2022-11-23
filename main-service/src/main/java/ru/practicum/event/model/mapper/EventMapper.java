@@ -16,6 +16,7 @@ public class EventMapper {
     public static Event toEvent(NewEventInDto eventDto, Category category, User initiator) {
         return Event.builder()
                 .annotation(eventDto.getAnnotation())
+                .initiator(initiator)
                 .category(category)
                 .description(eventDto.getDescription())
                 .eventDate(eventDto.getEventDate())

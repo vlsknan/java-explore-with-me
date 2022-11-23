@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
+import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,4 +70,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "e.eventDate between :rangeStart and :rangeEnd")
     List<Event> findAllWithoutCategory(int[] users, String[] states, LocalDateTime rangeStart,
                                        LocalDateTime rangeEnd, PageRequest page);
+
+    List<Event> findEventByInitiator(User initiator, PageRequest page);
 }

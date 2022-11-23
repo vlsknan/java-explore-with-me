@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
@@ -34,7 +33,7 @@ public class UserClosedServiceImpl implements UserClosedService {
 
     @Override
     public List<RequestDto> findByRequesterId(int userId) {
-        getUserById(userId);
+        findUserById(userId);
         return requestRepository.findAllByRequesterId(userId).stream()
                 .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
@@ -42,7 +41,7 @@ public class UserClosedServiceImpl implements UserClosedService {
 
     @Override
     public RequestDto addRequest(int userId, int eventId) {
-        User requester = getUserById(userId);
+        User requester = findUserById(userId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
         if (event.getInitiator() == requester) {
@@ -69,7 +68,7 @@ public class UserClosedServiceImpl implements UserClosedService {
         return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
-    private User getUserById(int userId) {
+    private User findUserById(int userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User with id=%s was not found.", userId)));
     }

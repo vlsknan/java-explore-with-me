@@ -15,14 +15,13 @@ import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.NotFoundException;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service

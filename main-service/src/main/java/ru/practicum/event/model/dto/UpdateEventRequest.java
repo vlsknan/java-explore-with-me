@@ -1,4 +1,4 @@
-package ru.practicum.request.model.dto;
+package ru.practicum.event.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateEventRequest { //Данные для изменения информации о событии
-//    @NotNull
-//    int eventId; //Идентификатор события
+    @NotNull
+    int eventId; //Идентификатор события
     String annotation; //Краткое описание
     CategoryDto category;
     String description; //Полное описание события
