@@ -28,5 +28,5 @@ public class EventShortOutDto {
     boolean paid; //Нужно ли оплачивать участие
     @NotNull
     String title; //Заголовок
-    int view;
+    int views;
 }

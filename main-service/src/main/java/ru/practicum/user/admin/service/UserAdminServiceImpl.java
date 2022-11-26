@@ -6,8 +6,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.practicum.exception.model.ConflictException;
 import ru.practicum.exception.model.NotFoundException;
-import ru.practicum.request.model.dto.NewUserRequest;
+import ru.practicum.user.model.dto.NewUserRequest;
 import ru.practicum.user.model.User;
 import ru.practicum.user.model.dto.UserOutDto;
 import ru.practicum.user.model.mapper.UserMapper;
@@ -35,6 +36,9 @@ public class UserAdminServiceImpl implements UserAdminService {
 
     @Override
     public UserOutDto save(NewUserRequest newUser) {
+        if (repository.existsUserByName(newUser.getName())) {
+            throw new ConflictException(String.format("User name '%s' already exists", newUser.getName()));
+        }
         User user = UserMapper.toUser(newUser);
         log.info("Пользователь с электронной почтой '{}' сохранен", user.getEmail());
         return UserMapper.toUserDto(repository.save(user));

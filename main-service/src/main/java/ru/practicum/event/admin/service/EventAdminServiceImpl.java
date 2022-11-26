@@ -1,38 +1,50 @@
 package ru.practicum.event.admin.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.Predicate;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.category.model.Category;
 import ru.practicum.category.model.mapper.CategoryMapper;
+import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
+import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.QEvent;
 import ru.practicum.event.model.dto.EventFullOutDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.exception.model.BadRequestException;
 import ru.practicum.exception.model.ConditionsNotMet;
+import ru.practicum.exception.model.InvalidRequestException;
 import ru.practicum.exception.model.NotFoundException;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.querydsl.core.types.ExpressionUtils.allOf;
 
 @Service
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventAdminServiceImpl implements EventAdminService {
     final EventRepository eventRepository;
     final RequestRepository requestRepository;
+    final CategoryRepository categoryRepository;
+    final StatsClient statsClient;
 
     /* Поиск событий с условиями
     users - список id пользователей, чьи события нужно найти
@@ -43,28 +55,68 @@ public class EventAdminServiceImpl implements EventAdminService {
     from - количество событий, которые нужно пропустить для формирования текущего набора
     size - количество событий в наборе
     */
-    public List<EventFullOutDto> findByConditions(int[] users, String[] states, int[] categories, LocalDateTime rangeStart,
-                                                  LocalDateTime rangeEnd, int from, int size) {
+    @Override
+    public List<EventFullOutDto> searchEvents(List<Integer> users, List<String> states, List<Integer> categories, String rangeStart,
+                                              String rangeEnd, Integer from, Integer size) {
         PageRequest page = pagination(from, size);
 
-        StateEvent[] stateEvents = null;
-        if (states != null) {
-            stateEvents = Arrays.stream(states)
-                    .map(this::mapToState)
-                    .toArray(StateEvent[]::new);
+        LocalDateTime startTime;
+        LocalDateTime endTime;
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (rangeStart == null) {
+            startTime = LocalDateTime.now();
+        } else {
+            startTime = LocalDateTime.parse(rangeStart, format);
         }
-        Optional<BooleanExpression> conditions = getFinalCondition(users, stateEvents, categories, rangeStart, rangeEnd);
+        if (rangeStart == null) {
+            endTime = LocalDateTime.now().plusYears(20);
+        } else {
+            endTime = LocalDateTime.parse(rangeEnd, format);
+        }
 
-        log.info("События по определенным параметрам найдены");
-        return conditions
-                .map(c -> eventRepository.findAll(c, page).getContent())
-                .orElseGet(() -> eventRepository.findAll(page).getContent()).stream()
+        List<StateEvent> stateEvents = null;
+        if (states != null) {
+            stateEvents = states.stream()
+                    .map(this::mapToState)
+                    .collect(Collectors.toList());
+        }
+
+        QEvent event = QEvent.event;
+
+        List<Predicate> predicates = new ArrayList<>();
+        if (users != null) {
+            predicates.add(event.initiator.id.in(users));
+        }
+        if (states != null && !states.isEmpty()) {
+            predicates.add(event.state.in(stateEvents));
+        }
+        if (categories != null && !categories.isEmpty()) {
+            predicates.add(event.category.id.in(categories));
+        }
+        if (rangeStart != null) {
+            predicates.add(event.eventDate.after(startTime));
+        }
+        if (rangeEnd != null) {
+            predicates.add(event.eventDate.before(endTime));
+        }
+        Predicate param = allOf(predicates);
+        Page<Event> events;
+        if (param != null) {
+            events = eventRepository.findAll(param, page);
+        } else {
+            events = eventRepository.findAllByEventDate(startTime, endTime, page);
+        }
+        log.info("Получены события с фильтрацией");
+        return events.stream()
                 .map(e -> EventMapper.toEventFullDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
                         UserMapper.toUserShortDto(e.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(e.getId())))
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
     public EventFullOutDto update(int eventId, UpdateEventRequest updateEvent) {
         Event oldEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
@@ -72,7 +124,10 @@ public class EventAdminServiceImpl implements EventAdminService {
             oldEvent.setAnnotation(updateEvent.getAnnotation());
         }
         if (updateEvent.getCategory() != null) {
-            oldEvent.setCategory(CategoryMapper.toCategory(updateEvent.getCategory()));
+            Category category = categoryRepository.findById(updateEvent.getCategory())
+                    .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.",
+                            updateEvent.getCategory())));
+            oldEvent.setCategory(category);
         }
         if (updateEvent.getDescription() != null) {
             oldEvent.setDescription(updateEvent.getDescription());
@@ -93,34 +148,52 @@ public class EventAdminServiceImpl implements EventAdminService {
         log.info("Событие с id = {} изменено", eventId);
         return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                 UserMapper.toUserShortDto(event.getInitiator()),
-                requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
+                requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
+                statsClient.getViews(event.getId()));
     }
 
+    @Override
+    @Transactional
     public EventFullOutDto publishEvent(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
-        log.error("Событие с id = {} не найдено", eventId);
-        if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
-            event.setState(StateEvent.PUBLISHED);
-            log.info("Событие с id = {} опубликовано", eventId);
-            return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                    UserMapper.toUserShortDto(event.getInitiator()),
-                    requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
+
+        if (event.getState().equals(StateEvent.PENDING)) {
+            if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                event.setState(StateEvent.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+                eventRepository.save(event);
+                log.info("Событие с id = {} опубликовано", eventId);
+                return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
+                        UserMapper.toUserShortDto(event.getInitiator()),
+                        requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(event.getId()));
+            }
+            throw new ConditionsNotMet("Start time of event must be at least 1 hour from now");
         }
-        throw new ConditionsNotMet("Only pending or canceled events can be changed");
+        throw new ConditionsNotMet("Only pending events can be changed");
     }
 
+    @Override
+    @Transactional
     public EventFullOutDto rejectEvent(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
-        if (event.getEventDate().isAfter(event.getPublishedOn().plusHours(1)) && event.getState().equals("PENDING")) {
-            event.setState(StateEvent.CANCELED);
-            log.info("Событие с id = {} отклонено", eventId);
-            return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                    UserMapper.toUserShortDto(event.getInitiator()),
-                    requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
+
+        if (event.getState().equals(StateEvent.PENDING)) {
+            if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                event.setState(StateEvent.CANCELED);
+                eventRepository.save(event);
+                log.info("Событие с id = {} отклонено", eventId);
+                return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
+                        UserMapper.toUserShortDto(event.getInitiator()),
+                        requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(event.getId()));
+            }
+            throw new ConditionsNotMet("The start date of the event should be no earlier than one hour " +
+                    "after the moment of publication");
         }
-        throw new ConditionsNotMet("Only pending or canceled events can be changed");
+        throw new ConditionsNotMet("Only pending events can be changed");
     }
 
     private PageRequest pagination(int from, int size) {
@@ -131,39 +204,8 @@ public class EventAdminServiceImpl implements EventAdminService {
     private StateEvent mapToState(String state) {
         try {
             return StateEvent.valueOf(state);
-        } catch (BadRequestException e) {
-            throw new BadRequestException(String.format("State is unsupported: %s", state));
+        } catch (InvalidRequestException e) {
+            throw new InvalidRequestException(String.format("State is unsupported: %s", state));
         }
     }
-
-    private Optional<BooleanExpression> getFinalCondition(int[] users, StateEvent[] states, int[] categories,
-                                                          LocalDateTime rangeStart, LocalDateTime rangeEnd) {
-        List<BooleanExpression> conditions = new ArrayList<>();
-        QEvent event = QEvent.event;
-
-        if (users != null) {
-            List<Integer> userIds = Arrays.stream(users)
-                    .mapToObj(Integer::valueOf)
-                    .collect(Collectors.toList());
-            conditions.add(event.initiator.id.in(userIds));
-        }
-        if (states != null) {
-            conditions.add(event.state.in(states));
-        }
-        if (categories != null) {
-            List<Integer> catIds = Arrays.stream(categories)
-                    .mapToObj(Integer::valueOf)
-                    .collect(Collectors.toList());
-            conditions.add(event.category.id.in(catIds));
-        }
-        if (rangeStart != null) {
-            conditions.add(event.eventDate.after(rangeStart));
-        }
-        if (rangeEnd != null) {
-            conditions.add(event.eventDate.before(rangeEnd));
-        }
-        return conditions.stream()
-                .reduce(BooleanExpression::and);
-    }
-
 }

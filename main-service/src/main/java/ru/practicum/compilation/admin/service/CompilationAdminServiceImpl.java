@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.model.dto.CompilationDto;
@@ -12,6 +13,7 @@ import ru.practicum.compilation.model.dto.NewCompilationDto;
 import ru.practicum.compilation.model.mapper.CompilationMapper;
 import ru.practicum.compilation.repository.CompilationRepository;
 import ru.practicum.enums.StatusRequest;
+import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
@@ -28,34 +30,44 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompilationAdminServiceImpl implements CompilationAdminService {
     final CompilationRepository compilationRepository;
     final EventRepository eventRepository;
     final RequestRepository requestRepository;
+    final StatsClient statsClient;
 
+    @Override
+    @Transactional
     public CompilationDto save(NewCompilationDto newCompilation) {
         List<Event> events = newCompilation.getEvents().stream()
-                .map(id -> eventRepository.findById(id).get())
-                .collect(Collectors.toList()); //получить каждое событие по id из новой подборки
+                .map(this::findEventById)
+                .collect(Collectors.toList());
+
+        Compilation saveCompilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilation, events));
+        log.info("Новая подборка с id = {} сохранена", saveCompilation.getId());
 
         List<EventShortOutDto> eventShortOutDtos = events.stream()
                 .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
                         UserMapper.toUserShortDto(e.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(e.getId())))
                 .collect(Collectors.toList());
 
-        Compilation compilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilation, events));
-        log.info("Новая подборка с id = {} сохранена", compilation.getId());
-        return CompilationMapper.toCompilationDto(compilation, eventShortOutDtos);
+        return CompilationMapper.toCompilationDto(saveCompilation, eventShortOutDtos);
     }
 
+    @Override
+    @Transactional
     public void deleteCompilation(int compId) {
         Compilation compilation = findCompilationById(compId);
         compilationRepository.delete(compilation);
         log.info("Подборка с id = {} удалена", compId);
     }
 
+    @Override
+    @Transactional
     public void deleteEventOfCompilation(int compId, int eventId) {
         Compilation compilation = findCompilationById(compId);
         Event event = findEventById(eventId);
@@ -68,6 +80,8 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
         log.info("Из подборки с id = {} удалено событие с id = {}", compId, event);
     }
 
+    @Override
+    @Transactional
     public void addEventInCompilation(int compId, int eventId) {
         Compilation compilation = findCompilationById(compId);
         Event event = findEventById(eventId);
@@ -80,22 +94,30 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
         log.info("В подборку с id = {} добавлено событие с id = {}", compId, event);
     }
 
+    @Override
+    @Transactional
     public void unpinCompilation(int compId) {
         Compilation compilation = findCompilationById(compId);
         if (compilation.isPinned()) {
             compilation.setPinned(false);
+            compilationRepository.save(compilation);
             log.info("Подборка с id = {} откреплена с главной страницы", compId);
+        } else {
+            throw new ConditionsNotMet("The collection is not attached to the main page.");
         }
-        throw new ConditionsNotMet("The collection is not attached to the main page.");
     }
 
+    @Override
+    @Transactional
     public void pinCompilation(int compId) {
         Compilation compilation = findCompilationById(compId);
         if (!compilation.isPinned()) {
             compilation.setPinned(true);
+            compilationRepository.save(compilation);
             log.info("Подборка с id = {} прикреплена на главную страницу", compId);
+        } else {
+            throw new ConditionsNotMet("The collection is already pinned on the main page.");
         }
-        throw new ConditionsNotMet("The collection is already pinned on the main page.");
     }
 
     private Compilation findCompilationById(int id) {

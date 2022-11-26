@@ -12,6 +12,7 @@ import ru.practicum.compilation.model.dto.CompilationDto;
 import ru.practicum.compilation.model.mapper.CompilationMapper;
 import ru.practicum.compilation.repository.CompilationRepository;
 import ru.practicum.enums.StatusRequest;
+import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.exception.model.NotFoundException;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class CompilationCommonServiceImpl implements CompilationCommonService {
     final CompilationRepository compilationRepository;
     final RequestRepository requestRepository;
+    final StatsClient statsClient;
 
     @Override
     public List<CompilationDto> findCompilation(boolean pinned, int from, int size) {
@@ -51,22 +53,23 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%s was not found.", compId)));
         List<EventShortOutDto> events = getEventShort(compilation);
-        log.info("получили подборки с if = {}", compId);
+        log.info("Получили подборки с id = {}", compId);
 
         return CompilationMapper.toCompilationDto(compilation, events);
-    }
-
-    private PageRequest pagination(int from, int size) {
-        int page = from < size ? 0 : from / size;
-        return PageRequest.of(page, size);
     }
 
     private List<EventShortOutDto> getEventShort(Compilation compilation) {
         List<EventShortOutDto> events = compilation.getEvents().stream()
                 .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
                         UserMapper.toUserShortDto(e.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(e.getId())))
                 .collect(Collectors.toList());
         return events;
+    }
+
+    private PageRequest pagination(int from, int size) {
+        int page = from < size ? 0 : from / size;
+        return PageRequest.of(page, size);
     }
 }

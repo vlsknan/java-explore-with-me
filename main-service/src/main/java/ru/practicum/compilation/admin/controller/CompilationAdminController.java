@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.compilation.admin.service.CompilationAdminServiceImpl;
+import ru.practicum.compilation.admin.service.CompilationAdminService;
 import ru.practicum.compilation.model.dto.CompilationDto;
 import ru.practicum.compilation.model.dto.NewCompilationDto;
 
@@ -22,11 +22,11 @@ import javax.validation.constraints.Positive;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Validated
 public class CompilationAdminController {
-    final CompilationAdminServiceImpl service;
+    final CompilationAdminService service;
 
     //Добавление новой подборки
     @PostMapping
-    public CompilationDto saveCompilation(@Valid @RequestBody NewCompilationDto newCompilation) {
+    public CompilationDto saveCompilation(@RequestBody @Valid NewCompilationDto newCompilation) {
         log.info("Добавить новую подборку с заголовком {} (CompilationAdminController)", newCompilation.getTitle());
         return service.save(newCompilation);
     }

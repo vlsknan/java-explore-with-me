@@ -30,7 +30,7 @@ public class UserClosedController {
 
     //Добавление запроса от текущего пользователя на участие в событии
     @PostMapping
-    public RequestDto addRequestFromUser(@Positive @PathVariable int userId, @Positive @RequestParam int eventId) {
+    public RequestDto addRequestFromUser(@PathVariable int userId, @RequestParam int eventId) {
         log.info("Добавить запрос пользователя с id = {} на участие в событии с id = {} (UserClosedController)",
                 userId, eventId);
         return service.addRequest(userId, eventId);

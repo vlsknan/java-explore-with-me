@@ -1,23 +1,22 @@
-package ru.practicum.request.model.dto;
+package ru.practicum.event.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.category.model.dto.CategoryDto;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateEventRequest {
     @NotNull
     int eventId; //Идентификатор события
     String annotation; //Краткое описание
-    CategoryDto category;
+    Integer category;
     String description; //Полное описание события
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate; //Дата и время на которые намечено событие (в формате "yyyy-MM-dd HH:mm:ss")

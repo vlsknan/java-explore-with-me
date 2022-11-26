@@ -7,12 +7,13 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.request.model.dto.NewEventInDto;
+import ru.practicum.event.model.dto.NewEventInDto;
 import ru.practicum.user.model.User;
 import ru.practicum.user.model.dto.UserShortDto;
 
 @UtilityClass
 public class EventMapper {
+
     public static Event toEvent(NewEventInDto eventDto, Category category, User initiator) {
         return Event.builder()
                 .annotation(eventDto.getAnnotation())
@@ -30,7 +31,7 @@ public class EventMapper {
     }
 
     public static EventFullOutDto toEventFullDto(Event event, CategoryDto category, UserShortDto initiator,
-                                                 int confirmedRequests) {
+                                                 int confirmedRequests, int view) {
         return EventFullOutDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -47,12 +48,12 @@ public class EventMapper {
                 .requestModeration(event.isRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
-                .view(event.getView())
+                .views(view)
                 .build();
     }
 
     public static EventShortOutDto toEventShortDto(Event event, CategoryDto category, UserShortDto initiator,
-                                                   int confirmedRequests) {
+                                                   int confirmedRequests, int view) {
         return EventShortOutDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -62,7 +63,7 @@ public class EventMapper {
                 .initiator(initiator)
                 .paid(event.isPaid())
                 .title(event.getTitle())
-                .view(event.getView())
+                .views(view)
                 .build();
     }
 

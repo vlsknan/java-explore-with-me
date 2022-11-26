@@ -14,13 +14,6 @@ public class CategoryMapper {
                 .build();
     }
 
-    public static Category toCategory(CategoryDto categoryDto) {
-        return Category.builder()
-                .id(categoryDto.getId())
-                .name(categoryDto.getName())
-                .build();
-    }
-
     public static Category toCategory(NewCategoryDto newCategoryDto) {
         return Category.builder()
                 .name(newCategoryDto.getName())

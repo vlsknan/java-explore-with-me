@@ -63,10 +63,13 @@ public class UserClosedServiceImpl implements UserClosedService {
     public RequestDto cancelRequest(int userId, int requestId) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException(String.format("Request with id=%s was not found.", requestId)));
-        request.setStatus(StatusRequest.CANCELED);
-        log.info("Запрос с id = {} пользователя с id = {} на участие отменен самим пользователем",
-                userId, request.getEvent().getId());
-        return RequestMapper.toRequestDto(requestRepository.save(request));
+        if (request.getRequester().getId() == userId) {
+            request.setStatus(StatusRequest.CANCELED);
+            log.info("Запрос с id = {} пользователя с id = {} на участие отменен самим пользователем",
+                    userId, request.getEvent().getId());
+            return RequestMapper.toRequestDto(requestRepository.save(request));
+        }
+        throw new ConditionsNotMet("You have not sent an application to participate in the event");
     }
 
     private User findUserById(int userId) {

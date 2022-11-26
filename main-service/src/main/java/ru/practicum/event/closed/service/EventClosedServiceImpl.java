@@ -6,20 +6,24 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.category.model.Category;
 import ru.practicum.category.model.mapper.CategoryMapper;
+import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
+import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.request.model.dto.NewEventInDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.NotFoundException;
 import ru.practicum.request.model.Request;
+import ru.practicum.event.model.dto.NewEventInDto;
 import ru.practicum.request.model.dto.RequestDto;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.request.model.mapper.RequestMapper;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.User;
@@ -34,10 +38,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Transactional(readOnly = true)
 public class EventClosedServiceImpl implements EventClosedService {
     final EventRepository eventRepository;
     final UserRepository userRepository;
     final RequestRepository requestRepository;
+    final CategoryRepository categoryRepository;
+    final StatsClient statsClient;
 
     @Override
     public List<EventShortOutDto> findEventByUser(int userId, int from, int size) {
@@ -49,11 +56,13 @@ public class EventClosedServiceImpl implements EventClosedService {
         return events.stream()
                 .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
                         UserMapper.toUserShortDto(e.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED)))
+                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED),
+                        statsClient.getViews(e.getId())))
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public EventFullOutDto update(int userId, UpdateEventRequest updateRequest) {
         User initiator = findUserById(userId);
         Event oldEvent = findEventById(updateRequest.getEventId());
@@ -72,7 +81,10 @@ public class EventClosedServiceImpl implements EventClosedService {
                 oldEvent.setDescription(updateRequest.getDescription());
             }
             if (updateRequest.getCategory() != null) {
-                oldEvent.setCategory(CategoryMapper.toCategory(updateRequest.getCategory()));
+                Category category = categoryRepository.findById(updateRequest.getCategory())
+                        .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.",
+                                updateRequest.getCategory())));
+                oldEvent.setCategory(category);
             }
             if (updateRequest.getEventDate() != null && updateRequest.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
                 oldEvent.setEventDate(updateRequest.getEventDate());
@@ -93,19 +105,26 @@ public class EventClosedServiceImpl implements EventClosedService {
         log.info("Данные о событии с id = {} изменены", updateEvent.getId());
         return EventMapper.toEventFullDto(updateEvent, CategoryMapper.toCategoryDto(updateEvent.getCategory()),
                 UserMapper.toUserShortDto(updateEvent.getInitiator()),
-                requestRepository.countByEventIdAndStatus(updateEvent.getId(), StatusRequest.CONFIRMED));
+                requestRepository.countByEventIdAndStatus(updateEvent.getId(), StatusRequest.CONFIRMED),
+                statsClient.getViews(updateEvent.getId()));
     }
 
     @Override
+    @Transactional
     public EventFullOutDto create(int userId, NewEventInDto newEvent) {
         User initiator = findUserById(userId);
+        Category category = categoryRepository.findById(newEvent.getCategory())
+                .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.",
+                        newEvent.getCategory())));
+
         if (newEvent.getEventDate() != null && newEvent.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
-            Event event = eventRepository.save(EventMapper.toEvent(newEvent,
-                    CategoryMapper.toCategory(newEvent.getCategory()), initiator));
-            log.info("Событие с заголовком '{}' создано", newEvent.getTitle());
-            return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                    UserMapper.toUserShortDto(event.getInitiator()),
-                    requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
+            Event event = EventMapper.toEvent(newEvent, category, initiator);
+            event.setState(StateEvent.PENDING);
+            Event saveEvent = eventRepository.save(event);
+            log.info("Событие с id = {} создано", saveEvent.getId());
+            return EventMapper.toEventFullDto(saveEvent, CategoryMapper.toCategoryDto(saveEvent.getCategory()),
+                    UserMapper.toUserShortDto(saveEvent.getInitiator()), 0,
+                    statsClient.getViews(saveEvent.getId()));
         }
         throw new ConditionsNotMet("Event start time in less than 2 hours");
     }
@@ -119,12 +138,14 @@ public class EventClosedServiceImpl implements EventClosedService {
             log.info("Получены данные события с id = {}", eventId);
             return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
                     UserMapper.toUserShortDto(event.getInitiator()),
-                    requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED));
+                    requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
+                    statsClient.getViews(event.getId()));
         }
         throw new ConditionsNotMet(String.format("You are not the initiator of the event with id=%s", eventId));
     }
 
     @Override
+    @Transactional
     public EventFullOutDto cancelEvent(int userId, int eventId) {
         User initiator = findUserById(userId);
         Event event = findEventById(eventId);
@@ -139,7 +160,8 @@ public class EventClosedServiceImpl implements EventClosedService {
             log.info("Событие с id = {} отменено", eventId);
             return EventMapper.toEventFullDto(newEvent, CategoryMapper.toCategoryDto(newEvent.getCategory()),
                     UserMapper.toUserShortDto(newEvent.getInitiator()),
-                    requestRepository.countByEventIdAndStatus(newEvent.getId(), StatusRequest.CONFIRMED));
+                    requestRepository.countByEventIdAndStatus(newEvent.getId(), StatusRequest.CONFIRMED),
+                    statsClient.getViews(newEvent.getId()));
         }
         throw new ConditionsNotMet(String.format("The event cannot be canceled because its status %s", event.getState()));
 
@@ -158,17 +180,22 @@ public class EventClosedServiceImpl implements EventClosedService {
     }
 
     @Override
+    @Transactional
     public RequestDto confirmRequest(int userId, int eventId, int reqId) {
         User initiator = findUserById(userId);
         Event event = findEventById(eventId);
         Request request = findRequestById(reqId);
 
+        if (event.getInitiator() != initiator) {
+            throw new ConditionsNotMet(String.format("You are not the initiator of the event with id=%s", eventId));
+        }
         if (event.getParticipantLimit() != 0 && event.isRequestModeration()) {
             int limit = event.getParticipantLimit();
             int participantRequest = requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED);
             if (limit > participantRequest) {
                 request.setStatus(StatusRequest.CONFIRMED);
                 requestRepository.save(request);
+
                 if (limit == ++participantRequest) {
                     requestRepository.findRequestByEvent(event).stream()
                             .filter(r -> r.getStatus() == StatusRequest.PENDING)
@@ -177,15 +204,17 @@ public class EventClosedServiceImpl implements EventClosedService {
                                 requestRepository.save(r);
                             });
                 }
+            } else {
+                throw new ConditionsNotMet(String.format("The event with id=%s has already reached " +
+                        "the request limit", event.getId()));
             }
-            throw new ConditionsNotMet(String.format("The event with id=%s has already reached " +
-                    "the request limit", event.getId()));
         }
-        log.info("Заявку с id = {} на участие в событии с id = {} подтверждена", reqId, eventId);
+        log.info("Заявка с id = {} на участие в событии с id = {} подтверждена", reqId, eventId);
         return RequestMapper.toRequestDto(request);
     }
 
     @Override
+    @Transactional
     public RequestDto rejectRequest(int userId, int eventId, int reqId) {
         User initiator = findUserById(userId);
         Event event = findEventById(eventId);

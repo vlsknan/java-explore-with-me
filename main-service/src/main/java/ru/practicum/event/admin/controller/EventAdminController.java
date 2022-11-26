@@ -4,16 +4,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.event.admin.service.EventAdminServiceImpl;
+import ru.practicum.event.admin.service.EventAdminService;
 import ru.practicum.event.model.dto.EventFullOutDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -23,20 +21,19 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class EventAdminController {
-    final EventAdminServiceImpl service;
+    final EventAdminService service;
 
     //Поиск событий
     @GetMapping
-    public List<EventFullOutDto> findByConditions(@RequestParam int[] users, @RequestParam String[] states,
-                                                  @RequestParam int[] categories,
-                                                  @RequestParam(required = false)
-                                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                                  @RequestParam(required = false)
-                                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                                  @RequestParam(defaultValue = "10") int size) {
+    public List<EventFullOutDto> findByConditions(@RequestParam(required = false) List<Integer> users,
+                                                  @RequestParam(required = false) List<String> states,
+                                                  @RequestParam(required = false) List<Integer> categories,
+                                                  @RequestParam(required = false) String rangeStart,
+                                                  @RequestParam(required = false) String rangeEnd,
+                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                                  @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Поиск событий с фильтрацией (EventAdminController)");
-        return service.findByConditions(users, states, categories, rangeStart, rangeEnd, from, size);
+        return service.searchEvents(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     //Редактирование события

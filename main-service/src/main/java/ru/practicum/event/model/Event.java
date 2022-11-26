@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
+    Integer id;
     String annotation;
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -40,6 +40,7 @@ public class Event {
     int participantLimit;
     @Column(name = "published_on")
     LocalDateTime publishedOn;
+    @Enumerated(EnumType.STRING)
     StateEvent state;
     @Column(name = "location_latitude")
     float locationLatitude;
@@ -47,5 +48,4 @@ public class Event {
     float locationLongitude;
     @Column(name = "request_moderation")
     boolean requestModeration;
-    int view;
 }

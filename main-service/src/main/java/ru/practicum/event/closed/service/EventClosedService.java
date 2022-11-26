@@ -2,9 +2,9 @@ package ru.practicum.event.closed.service;
 
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.request.model.dto.NewEventInDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.NewEventInDto;
 import ru.practicum.request.model.dto.RequestDto;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 
 import java.util.List;
 
@@ -24,6 +24,5 @@ public interface EventClosedService {
     RequestDto confirmRequest(int userId, int eventId, int reqId);
 
     RequestDto rejectRequest(int userId, int eventId, int reqId);
-
 
 }

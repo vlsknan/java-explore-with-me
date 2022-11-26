@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.closed.service.EventClosedService;
 import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.EventShortOutDto;
-import ru.practicum.request.model.dto.NewEventInDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.NewEventInDto;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.request.model.dto.RequestDto;
 
 import javax.validation.Valid;
@@ -31,7 +31,7 @@ public class EventClosedController {
     @GetMapping
     public List<EventShortOutDto> findEventByUser(@PathVariable(required = false) @Positive int userId,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                                  @RequestParam(defaultValue = "10") int size) {
+                                                  @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("Получить события добавленные пользователем с id = {} (EventClosedController)", userId);
         return service.findEventByUser(userId, from, size);
     }
@@ -47,7 +47,7 @@ public class EventClosedController {
 
     //Добавление нового события
     @PostMapping
-    public EventFullOutDto createEvent(@PathVariable(required = false) @Positive int userId,
+    public EventFullOutDto createEvent(@PathVariable(required = false) int userId,
                                        @RequestBody(required = false) @Valid NewEventInDto newEvent) {
         log.info("Добавить событие '{}' пользователем с id = {} (EventClosedController)", newEvent.getTitle(), userId);
         return service.create(userId, newEvent);

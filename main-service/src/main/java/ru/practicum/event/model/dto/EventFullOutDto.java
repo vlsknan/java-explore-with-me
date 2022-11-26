@@ -1,19 +1,21 @@
 package ru.practicum.event.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.enums.StateEvent;
 import ru.practicum.event.model.Location;
 import ru.practicum.user.model.dto.UserShortDto;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventFullOutDto {
     int id;
@@ -32,7 +34,8 @@ public class EventFullOutDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime publishedOn; //Дата и время публикации события (в формате "yyyy-MM-dd HH:mm:ss")
     boolean requestModeration; //Нужна ли пре-модерация заявок на участие
+    @Enumerated(EnumType.STRING)
     StateEvent state; //Список состояний жизненного цикла события
     String title; //Заголовок
-    int view; //Количество просмотров события
+    int views; //Количество просмотров события
 }

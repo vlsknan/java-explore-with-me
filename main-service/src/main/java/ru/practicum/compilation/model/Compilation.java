@@ -20,6 +20,11 @@ public class Compilation {
     int id;
     String title;
     boolean pinned;
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.ALL})
+    @JoinTable(
+            name = "event_compilations",
+            joinColumns = {@JoinColumn(name = "compilation_id")},
+            inverseJoinColumns = {@JoinColumn(name = "event_id")}
+    )
     List<Event> events;
 }

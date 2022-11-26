@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.request.model.dto.NewUserRequest;
-import ru.practicum.user.admin.service.UserAdminServiceImpl;
+import ru.practicum.user.model.dto.NewUserRequest;
+import ru.practicum.user.admin.service.UserAdminService;
 import ru.practicum.user.model.dto.UserOutDto;
 
 import javax.validation.Valid;
@@ -24,7 +24,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Validated
 public class UserAdminController {
-    final UserAdminServiceImpl service;
+    final UserAdminService service;
 
     //Получение информации о пользователях
     @GetMapping

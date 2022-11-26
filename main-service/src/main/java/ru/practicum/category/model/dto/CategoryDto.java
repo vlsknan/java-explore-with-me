@@ -1,9 +1,6 @@
 package ru.practicum.category.model.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.NotNull;
@@ -11,10 +8,11 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryDto {
-    @NotNull
+    @NotNull(message = "Id cannot be null")
     int id; //Идентификатор категории
-    @NotNull
+    @NotNull(message = "Category name cannot be null")
     String name; //Название категории
 }

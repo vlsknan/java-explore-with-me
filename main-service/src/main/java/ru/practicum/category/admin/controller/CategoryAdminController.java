@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.category.admin.service.CategoryAdminServiceImpl;
+import ru.practicum.category.admin.service.CategoryAdminService;
 import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.category.model.dto.NewCategoryDto;
 
@@ -21,7 +21,7 @@ import javax.validation.Valid;
 @RequestMapping("/admin/categories")
 @Validated
 public class CategoryAdminController {
-    final CategoryAdminServiceImpl service;
+    final CategoryAdminService service;
 
     //Изменение категории
     @PatchMapping

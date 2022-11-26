@@ -1,8 +1,7 @@
 package ru.practicum.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AccessLevel;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
@@ -11,6 +10,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "hits")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EndpointHit {
     @Id

@@ -1,14 +1,13 @@
 package ru.practicum.event.admin.service;
 
 import ru.practicum.event.model.dto.EventFullOutDto;
-import ru.practicum.request.model.dto.UpdateEventRequest;
+import ru.practicum.event.model.dto.UpdateEventRequest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventAdminService {
-    List<EventFullOutDto> findByConditions(int[] users, String[] states, int[] categories, LocalDateTime rangeStart,
-                                           LocalDateTime rangeEnd, int from, int size);
+    List<EventFullOutDto> searchEvents(List<Integer> users, List<String> states, List<Integer> categories, String rangeStart,
+                                       String rangeEnd, Integer from, Integer size);
 
     EventFullOutDto update(int eventId, UpdateEventRequest updateEvent);
 
