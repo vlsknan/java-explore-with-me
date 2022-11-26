@@ -8,7 +8,7 @@ PR: https://github.com/vlsknan/java-explore-with-me/pull/2
 ### Спецификация API:
 
 Для обоих сервисов разработана спецификация API:
-* [Основной сервис](https://github.com/devShurakov/java-Explore-With-Me/blob/main/ewm-main-service-spec.json)
-* [Сервис статистики](https://github.com/devShurakov/java-Explore-With-Me/blob/main/ewm-stats-service-spec.json)
+* [Основной сервис](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-main-service-spec.json)
+* [Сервис статистики](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-stats-service-spec.json)
 
 Просмотреть спецификацию можно на сайте https://editor-next.swagger.io/.
