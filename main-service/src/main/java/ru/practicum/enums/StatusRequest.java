@@ -1,6 +1,8 @@
 package ru.practicum.enums;
 
 public enum StatusRequest {
-    PENDING, CONFIRMED, REJECTED, CANCELED
+    PENDING, //Ожидание
+    CONFIRMED, //Подтверждено
+    REJECTED, //Отклонено
+    CANCELED //Отменено
 }
-//Ожидание, подтверждено, отклонено, отменено

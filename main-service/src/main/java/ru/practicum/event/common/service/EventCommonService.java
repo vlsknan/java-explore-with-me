@@ -7,9 +7,9 @@ import ru.practicum.event.model.dto.EventShortOutDto;
 import java.util.List;
 
 public interface EventCommonService {
-    List<EventShortOutDto> findEvents(String text, List<Integer> categories, Boolean paid, String rangeStart,
-                                      String rangeEnd, boolean onlyAvailable, EventSorting sort,
-                                      int from, int size);
+    List<EventShortOutDto> getFilteredEvents(String text, List<Integer> categories, Boolean paid, String rangeStart,
+                                             String rangeEnd, boolean onlyAvailable, EventSorting sort,
+                                             int from, int size);
 
-    EventFullOutDto findEventById(int id);
+    EventFullOutDto getEventById(int id);
 }

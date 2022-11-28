@@ -29,11 +29,11 @@ public class EventClosedController {
 
     //Получение событий, добавленных текущим пользователем
     @GetMapping
-    public List<EventShortOutDto> findEventByUser(@PathVariable(required = false) @Positive int userId,
+    public List<EventShortOutDto> getEventByUser(@PathVariable(required = false) @Positive int userId,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                   @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("Получить события добавленные пользователем с id = {} (EventClosedController)", userId);
-        return service.findEventByUser(userId, from, size);
+        return service.getEventByUser(userId, from, size);
     }
 
     //Изменение события добавленного текущим пользователем
@@ -55,10 +55,10 @@ public class EventClosedController {
 
     //Получение полной информации о событии добавленном текущим пользователем
     @GetMapping("/{eventId}")
-    public EventFullOutDto findEventById(@PathVariable(required = false) @Positive int userId,
+    public EventFullOutDto getEventById(@PathVariable(required = false) @Positive int userId,
                                          @PathVariable(required = false) @Positive int eventId) {
         log.info("Получить полную информацию о событии с id = {} (EventClosedController)", eventId);
-        return service.findEventById(userId, eventId);
+        return service.getEventById(userId, eventId);
     }
 
     //Отмена события добавленного текущим пользователем
@@ -74,7 +74,7 @@ public class EventClosedController {
     public List<RequestDto> findRequestsByUser(@PathVariable(required = false) @Positive int userId,
                                                @PathVariable(required = false) @Positive int eventId) {
         log.info("Получить информацию о запросах на участие в событии с id = {} (EventClosedController)", eventId);
-        return service.findRequestsByUser(userId, eventId);
+        return service.getRequestsByUser(userId, eventId);
     }
 
     //Подтверждение чужой заявки на участие в событии текущего пользователя

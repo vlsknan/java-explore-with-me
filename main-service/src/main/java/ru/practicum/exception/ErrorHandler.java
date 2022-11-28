@@ -5,38 +5,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.exception.model.*;
+import ru.practicum.exception.model.ConditionsNotMet;
+import ru.practicum.exception.model.ConflictException;
+import ru.practicum.exception.model.InvalidRequestException;
+import ru.practicum.exception.model.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-/*
-400 - запрос составлен с ошибкой
-403 - не выполнены условия для совершения операции
-404 - объект не найден
-409 - запрос привод к нарушению целостности данных
-500 - внутренняя ошибка сервера
- */
-
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-
-//    @ExceptionHandler(BadRequestException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ApiError handleException(BadRequestException e) {
-//        log.error("400: {}", e.getMessage(), e.getCause());
-//        return ApiError.builder()
-//                .errors(List.of(Arrays.toString(e.getStackTrace())))
-//                .message(e.getMessage())
-//                .reason("The request was made with an error")
-//                .status("BAD_REQUEST")
-//                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-//                .build();
-//    }
-
     @ExceptionHandler(InvalidRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleInvalidRequestException(final RuntimeException e) {

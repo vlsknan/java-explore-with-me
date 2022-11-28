@@ -5,7 +5,7 @@ import ru.practicum.category.model.dto.CategoryDto;
 import java.util.List;
 
 public interface CategoryCommonService {
-    List<CategoryDto> findAll(int from, int size);
+    List<CategoryDto> getAll(int from, int size);
 
-    CategoryDto findById(int catId);
+    CategoryDto getById(int catId);
 }

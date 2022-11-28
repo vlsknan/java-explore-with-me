@@ -25,7 +25,7 @@ public class EventAdminController {
 
     //Поиск событий
     @GetMapping
-    public List<EventFullOutDto> findByConditions(@RequestParam(required = false) List<Integer> users,
+    public List<EventFullOutDto> getByConditions(@RequestParam(required = false) List<Integer> users,
                                                   @RequestParam(required = false) List<String> states,
                                                   @RequestParam(required = false) List<Integer> categories,
                                                   @RequestParam(required = false) String rangeStart,

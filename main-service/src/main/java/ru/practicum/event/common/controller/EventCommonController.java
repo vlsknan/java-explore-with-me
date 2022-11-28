@@ -27,19 +27,19 @@ public class EventCommonController {
 
     //Получение событий с возможностью фильтраций
     @GetMapping
-    public List<EventShortOutDto> findEvents(@RequestParam(required = false) String text,
-                                             @RequestParam(required = false) List<Integer> categories,
-                                             @RequestParam(required = false) Boolean paid,
-                                             @RequestParam(required = false) String rangeStart,
-                                             @RequestParam(required = false) String rangeEnd,
-                                             @RequestParam(defaultValue = "false") boolean onlyAvailable,
-                                             @RequestParam(defaultValue = "EVENT_DATE") EventSorting sort,
-                                             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                             @RequestParam(defaultValue = "10") @Positive int size,
-                                             HttpServletRequest request) {
+    public List<EventShortOutDto> getFilteredEvents(@RequestParam(required = false) String text,
+                                                    @RequestParam(required = false) List<Integer> categories,
+                                                    @RequestParam(required = false) Boolean paid,
+                                                    @RequestParam(required = false) String rangeStart,
+                                                    @RequestParam(required = false) String rangeEnd,
+                                                    @RequestParam(defaultValue = "false") boolean onlyAvailable,
+                                                    @RequestParam(defaultValue = "EVENT_DATE") EventSorting sort,
+                                                    @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                    @RequestParam(defaultValue = "10") @Positive int size,
+                                                    HttpServletRequest request) {
         statClient.sentStat(request);
         log.info("Получить события с фильтрацией (EventCommonController)");
-        return service.findEvents(text, categories, paid, rangeStart,
+        return service.getFilteredEvents(text, categories, paid, rangeStart,
                 rangeEnd, onlyAvailable, sort, from, size);
     }
 
@@ -48,6 +48,6 @@ public class EventCommonController {
     public EventFullOutDto findEventById(@PathVariable @Positive int id, HttpServletRequest request) {
         statClient.sentStat(request);
         log.info("Получить полную информацию о событии с id = {} (EventCommonController)", id);
-        return service.findEventById(id);
+        return service.getEventById(id);
     }
 }

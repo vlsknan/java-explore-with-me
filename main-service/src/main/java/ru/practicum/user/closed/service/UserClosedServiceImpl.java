@@ -9,8 +9,7 @@ import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.exception.model.ConditionsNotMet;
-import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.exception.model.*;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.dto.RequestDto;
 import ru.practicum.request.model.mapper.RequestMapper;
@@ -32,19 +31,20 @@ public class UserClosedServiceImpl implements UserClosedService {
     final RequestRepository requestRepository;
 
     @Override
-    public List<RequestDto> findByRequesterId(int userId) {
-        findUserById(userId);
+    public List<RequestDto> getByRequesterId(int userId) {
+        getUserById(userId);
+        List<Request> requests = requestRepository.findAllByRequesterId(userId);
         log.info("Получены все запросы на участие в событиях пользователя с id = {}", userId);
-        return requestRepository.findAllByRequesterId(userId).stream()
+        return requests.stream()
                 .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public RequestDto addRequest(int userId, int eventId) {
-        User requester = findUserById(userId);
+        User requester = getUserById(userId);
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
+                .orElseThrow(() -> new EventNotFoundException(eventId));
         if (event.getInitiator() == requester) {
             throw new ConditionsNotMet("You are the event initiator.");
         }
@@ -62,7 +62,8 @@ public class UserClosedServiceImpl implements UserClosedService {
     @Override
     public RequestDto cancelRequest(int userId, int requestId) {
         Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException(String.format("Request with id=%s was not found.", requestId)));
+                .orElseThrow(() -> new RequestNotFoundException(requestId));
+
         if (request.getRequester().getId() == userId) {
             request.setStatus(StatusRequest.CANCELED);
             log.info("Запрос с id = {} пользователя с id = {} на участие отменен самим пользователем",
@@ -72,9 +73,9 @@ public class UserClosedServiceImpl implements UserClosedService {
         throw new ConditionsNotMet("You have not sent an application to participate in the event");
     }
 
-    private User findUserById(int userId) {
+    private User getUserById(int userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User with id=%s was not found.", userId)));
+                .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     private void checkParamEvent(Event event, int userId) {

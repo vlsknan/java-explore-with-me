@@ -8,8 +8,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.enums.EventSorting;
@@ -23,7 +23,7 @@ import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.ConditionsNotMet;
-import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.exception.model.EventNotFoundException;
 import ru.practicum.request.model.QRequest;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.dto.UserShortDto;
@@ -58,10 +58,10 @@ public class EventCommonServiceImpl implements EventCommonService {
     size - количество событий в наборе
      */
     @Override
-    public List<EventShortOutDto> findEvents(String text, List<Integer> categories, Boolean paid, String rangeStart,
-                                             String rangeEnd, boolean onlyAvailable, EventSorting sort,
-                                             int from, int size) {
-        PageRequest page = pagination(from, size, sort);
+    public List<EventShortOutDto> getFilteredEvents(String text, List<Integer> categories, Boolean paid, String rangeStart,
+                                                    String rangeEnd, boolean onlyAvailable, EventSorting sort,
+                                                    int from, int size) {
+        PageRequest page = PageUtility.pagination(from, size, sort);
 
         LocalDateTime startTime;
         LocalDateTime endTime;
@@ -88,12 +88,6 @@ public class EventCommonServiceImpl implements EventCommonService {
         if (paid != null) {
             predicates.add(paid ? event.paid.isTrue() : event.paid.isFalse());
         }
-        if (rangeStart != null) {
-            predicates.add(event.eventDate.after(startTime));
-        }
-        if (rangeEnd != null) {
-            predicates.add(event.eventDate.before(endTime));
-        }
         if (onlyAvailable) {
             QRequest request = QRequest.request;
             BooleanExpression ifLimitIsZero = event.participantLimit.eq(0);
@@ -103,14 +97,11 @@ public class EventCommonServiceImpl implements EventCommonService {
                     .and(event.participantLimit.goe(request.status.eq(StatusRequest.CONFIRMED).count()));
             predicates.add(ifLimitIsZero.or(ifRequestModerationFalse).or(ifRequestModerationTrue));
         }
-
+        predicates.add(event.eventDate.after(startTime));
+        predicates.add(event.eventDate.before(endTime));
         Predicate param = allOf(predicates);
-        Page<Event> events;
-        if (param != null) {
-            events = eventRepository.findAll(param, page);
-        } else {
-            events = eventRepository.findAllByEventDate(startTime, endTime, page);
-        }
+
+        Page<Event> events = eventRepository.findAll(param, page);
         log.info("Получены события с фильтрацией");
         return events.stream()
                 .map(e -> EventMapper.toEventShortDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
@@ -121,9 +112,10 @@ public class EventCommonServiceImpl implements EventCommonService {
     }
 
     @Override
-    public EventFullOutDto findEventById(int id) {
+    public EventFullOutDto getEventById(int id) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", id)));
+                .orElseThrow(() -> new EventNotFoundException(id));
+
         if (event.getState().equals(StateEvent.PUBLISHED)) {
             CategoryDto category = CategoryMapper.toCategoryDto(event.getCategory());
             UserShortDto initiator = UserMapper.toUserShortDto(event.getInitiator());
@@ -135,17 +127,4 @@ public class EventCommonServiceImpl implements EventCommonService {
         throw new ConditionsNotMet("There are no rights to view the event with id=%s" +
                 " because it has not been published yet");
     }
-
-    private PageRequest pagination(int from, int size, EventSorting sort) {
-        int page = from < size ? 0 : from / size;
-        String sorting = "";
-        if (sort.equals(EventSorting.EVENT_DATE)) {
-            sorting = "eventDate";
-        }
-        if (sort.equals(EventSorting.VIEWS)) {
-            sorting = "view";
-        }
-        return PageRequest.of(page, size, Sort.by(sorting).descending());
-    }
-
 }

@@ -11,8 +11,8 @@ import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.category.model.dto.NewCategoryDto;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.exception.model.CategoryNotFoundException;
 import ru.practicum.exception.model.ConflictException;
-import ru.practicum.exception.model.NotFoundException;
 
 @Service
 @Slf4j
@@ -25,12 +25,11 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     @Override
     @Transactional
     public CategoryDto update(CategoryDto updateCategory) {
-        if (repository.existsByName(updateCategory.getName())) {
-            throw new ConflictException(String.format("Category name '%s' already exists", updateCategory.getName()));
-        }
-        Category oldCategory = repository.findById(updateCategory.getId())
-                .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.", updateCategory.getId())));
+        checkNameInRepository(updateCategory.getName());
+
+        Category oldCategory = getCategoryById(updateCategory.getId());
         oldCategory.setName(updateCategory.getName());
+        repository.save(oldCategory);
         log.info("Название категории с id = {} изменено на {}", oldCategory.getId(), oldCategory.getName());
         return CategoryMapper.toCategoryDto(oldCategory);
     }
@@ -38,20 +37,28 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     @Override
     @Transactional
     public CategoryDto save(NewCategoryDto newCategory) {
-        if (repository.existsByName(newCategory.getName())) {
-            throw new ConflictException(String.format("Category name '%s' already exists", newCategory.getName()));
-        }
-        Category category = CategoryMapper.toCategory(newCategory);
+        checkNameInRepository(newCategory.getName());
+        Category category = repository.save(CategoryMapper.toCategory(newCategory));
         log.info("Добавлена категория с названием {}", newCategory.getName());
-        return CategoryMapper.toCategoryDto(repository.save(category));
+        return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
     @Transactional
     public void delete(int catId) {
-        Category category = repository.findById(catId)
-                .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.", catId)));
+        Category category = getCategoryById(catId);
         repository.delete(category);
         log.info("Категория с id = {} удалена", catId);
+    }
+
+    private void checkNameInRepository(String name) {
+        if (repository.existsByName(name)) {
+            throw new ConflictException(String.format("Category name = '%s' already exists ", name));
+        }
+    }
+
+    private Category getCategoryById(int catId) {
+        return repository.findById(catId)
+                .orElseThrow(() -> new CategoryNotFoundException(catId));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.category.repository.CategoryRepository;
@@ -21,9 +22,7 @@ import ru.practicum.event.model.dto.EventFullOutDto;
 import ru.practicum.event.model.dto.UpdateEventRequest;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.exception.model.ConditionsNotMet;
-import ru.practicum.exception.model.InvalidRequestException;
-import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.exception.model.*;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
@@ -58,7 +57,7 @@ public class EventAdminServiceImpl implements EventAdminService {
     @Override
     public List<EventFullOutDto> searchEvents(List<Integer> users, List<String> states, List<Integer> categories, String rangeStart,
                                               String rangeEnd, Integer from, Integer size) {
-        PageRequest page = pagination(from, size);
+        PageRequest page = PageUtility.pagination(from, size);
 
         LocalDateTime startTime;
         LocalDateTime endTime;
@@ -93,25 +92,14 @@ public class EventAdminServiceImpl implements EventAdminService {
         if (categories != null && !categories.isEmpty()) {
             predicates.add(event.category.id.in(categories));
         }
-        if (rangeStart != null) {
-            predicates.add(event.eventDate.after(startTime));
-        }
-        if (rangeEnd != null) {
-            predicates.add(event.eventDate.before(endTime));
-        }
+        predicates.add(event.eventDate.after(startTime));
+        predicates.add(event.eventDate.before(endTime));
         Predicate param = allOf(predicates);
-        Page<Event> events;
-        if (param != null) {
-            events = eventRepository.findAll(param, page);
-        } else {
-            events = eventRepository.findAllByEventDate(startTime, endTime, page);
-        }
+
+        Page<Event> events = eventRepository.findAll(param, page);
         log.info("Получены события с фильтрацией");
         return events.stream()
-                .map(e -> EventMapper.toEventFullDto(e, CategoryMapper.toCategoryDto(e.getCategory()),
-                        UserMapper.toUserShortDto(e.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(e.getId(), StatusRequest.CONFIRMED),
-                        statsClient.getViews(e.getId())))
+                .map(this::getEventFullOutDto)
                 .collect(Collectors.toList());
     }
 
@@ -119,14 +107,13 @@ public class EventAdminServiceImpl implements EventAdminService {
     @Transactional
     public EventFullOutDto update(int eventId, UpdateEventRequest updateEvent) {
         Event oldEvent = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
+                .orElseThrow(() -> new EventNotFoundException(eventId));
         if (updateEvent.getAnnotation() != null) {
             oldEvent.setAnnotation(updateEvent.getAnnotation());
         }
         if (updateEvent.getCategory() != null) {
             Category category = categoryRepository.findById(updateEvent.getCategory())
-                    .orElseThrow(() -> new NotFoundException(String.format("Category with id=%s was not found.",
-                            updateEvent.getCategory())));
+                    .orElseThrow(() -> new CategoryNotFoundException(updateEvent.getCategory()));
             oldEvent.setCategory(category);
         }
         if (updateEvent.getDescription() != null) {
@@ -146,17 +133,13 @@ public class EventAdminServiceImpl implements EventAdminService {
         }
         Event event = eventRepository.save(oldEvent);
         log.info("Событие с id = {} изменено", eventId);
-        return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                UserMapper.toUserShortDto(event.getInitiator()),
-                requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
-                statsClient.getViews(event.getId()));
+        return getEventFullOutDto(event);
     }
 
     @Override
     @Transactional
     public EventFullOutDto publishEvent(int eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
+        Event event = getEventById(eventId);
 
         if (event.getState().equals(StateEvent.PENDING)) {
             if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
@@ -164,10 +147,7 @@ public class EventAdminServiceImpl implements EventAdminService {
                 event.setPublishedOn(LocalDateTime.now());
                 eventRepository.save(event);
                 log.info("Событие с id = {} опубликовано", eventId);
-                return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                        UserMapper.toUserShortDto(event.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
-                        statsClient.getViews(event.getId()));
+                return getEventFullOutDto(event);
             }
             throw new ConditionsNotMet("Start time of event must be at least 1 hour from now");
         }
@@ -177,28 +157,19 @@ public class EventAdminServiceImpl implements EventAdminService {
     @Override
     @Transactional
     public EventFullOutDto rejectEvent(int eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
+        Event event = getEventById(eventId);
 
         if (event.getState().equals(StateEvent.PENDING)) {
             if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
                 event.setState(StateEvent.CANCELED);
                 eventRepository.save(event);
                 log.info("Событие с id = {} отклонено", eventId);
-                return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
-                        UserMapper.toUserShortDto(event.getInitiator()),
-                        requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
-                        statsClient.getViews(event.getId()));
+                return getEventFullOutDto(event);
             }
             throw new ConditionsNotMet("The start date of the event should be no earlier than one hour " +
                     "after the moment of publication");
         }
         throw new ConditionsNotMet("Only pending events can be changed");
-    }
-
-    private PageRequest pagination(int from, int size) {
-        int page = from < size ? 0 : from / size;
-        return PageRequest.of(page, size);
     }
 
     private StateEvent mapToState(String state) {
@@ -207,5 +178,17 @@ public class EventAdminServiceImpl implements EventAdminService {
         } catch (InvalidRequestException e) {
             throw new InvalidRequestException(String.format("State is unsupported: %s", state));
         }
+    }
+
+    private Event getEventById(int eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException(eventId));
+    }
+
+    private EventFullOutDto getEventFullOutDto(Event event) {
+        return EventMapper.toEventFullDto(event, CategoryMapper.toCategoryDto(event.getCategory()),
+                UserMapper.toUserShortDto(event.getInitiator()),
+                requestRepository.countByEventIdAndStatus(event.getId(), StatusRequest.CONFIRMED),
+                statsClient.getViews(event.getId()));
     }
 }

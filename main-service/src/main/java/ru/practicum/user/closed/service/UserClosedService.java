@@ -5,7 +5,7 @@ import ru.practicum.request.model.dto.RequestDto;
 import java.util.List;
 
 public interface UserClosedService {
-    List<RequestDto> findByRequesterId(int userId);
+    List<RequestDto> getByRequesterId(int userId);
 
     RequestDto addRequest(int userId, int eventId);
 

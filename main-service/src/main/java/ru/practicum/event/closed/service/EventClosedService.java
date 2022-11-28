@@ -9,17 +9,17 @@ import ru.practicum.event.model.dto.UpdateEventRequest;
 import java.util.List;
 
 public interface EventClosedService {
-    List<EventShortOutDto> findEventByUser(int userId, int from, int size);
+    List<EventShortOutDto> getEventByUser(int userId, int from, int size);
 
     EventFullOutDto update(int userId, UpdateEventRequest updateRequest);
 
     EventFullOutDto create(int userId, NewEventInDto newEvent);
 
-    EventFullOutDto findEventById(int userId, int eventId);
+    EventFullOutDto getEventById(int userId, int eventId);
 
     EventFullOutDto cancelEvent(int userId, int eventId);
 
-    List<RequestDto> findRequestsByUser(int userId, int eventId);
+    List<RequestDto> getRequestsByUser(int userId, int eventId);
 
     RequestDto confirmRequest(int userId, int eventId, int reqId);
 

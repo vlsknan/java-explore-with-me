@@ -28,11 +28,11 @@ public class UserAdminController {
 
     //Получение информации о пользователях
     @GetMapping
-    public List<UserOutDto> findUserByConditions(@RequestParam int[] ids,
+    public List<UserOutDto> getUserByConditions(@RequestParam int[] ids,
                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                  @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("Получить информацию о пользователях (UserAdminController)");
-        return service.findUserByConditions(ids, from, size);
+        return service.getUserByConditions(ids, from, size);
     }
 
     //Добавление нового пользователя

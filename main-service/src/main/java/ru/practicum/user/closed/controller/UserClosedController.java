@@ -23,9 +23,9 @@ public class UserClosedController {
 
     //Получение информации о заявках текущего пользователя на участие в чужих событиях
     @GetMapping
-    public List<RequestDto> findRequestByRequesterId(@Positive @PathVariable int userId) {
+    public List<RequestDto> getRequestByRequesterId(@Positive @PathVariable int userId) {
         log.info("Получить информацию о заявка пользователя с id = {} (UserClosedController)", userId);
-        return service.findByRequesterId(userId);
+        return service.getByRequesterId(userId);
     }
 
     //Добавление запроса от текущего пользователя на участие в событии

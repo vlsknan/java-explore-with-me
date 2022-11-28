@@ -5,7 +5,7 @@ import ru.practicum.compilation.model.dto.CompilationDto;
 import java.util.List;
 
 public interface CompilationCommonService {
-    List<CompilationDto> findCompilation(boolean pinned, int from, int size);
+    List<CompilationDto> getCompilations(boolean pinned, int from, int size);
 
-    CompilationDto findCompilationById(int compId);
+    CompilationDto getCompilationById(int compId);
 }

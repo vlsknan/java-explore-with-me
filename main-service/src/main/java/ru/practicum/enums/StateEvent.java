@@ -1,6 +1,7 @@
 package ru.practicum.enums;
 
 public enum StateEvent {
-    PENDING, PUBLISHED, CANCELED
+    PENDING, //Ожидание
+    PUBLISHED, //Опубликовано
+    CANCELED //Отменено
 }
-//Ожидание, опубликовано, отменено

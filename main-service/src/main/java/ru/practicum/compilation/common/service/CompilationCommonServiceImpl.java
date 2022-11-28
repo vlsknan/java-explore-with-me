@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.model.dto.CompilationDto;
@@ -15,7 +16,7 @@ import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
-import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.exception.model.CompilationNotFoundException;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
@@ -32,30 +33,21 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
     final StatsClient statsClient;
 
     @Override
-    public List<CompilationDto> findCompilation(boolean pinned, int from, int size) {
-        PageRequest page = pagination(from, size);
+    public List<CompilationDto> getCompilations(boolean pinned, int from, int size) {
+        PageRequest page = PageUtility.pagination(from, size);
         List<Compilation> compilations = compilationRepository.findAllByPinned(pinned, page);
-        List<EventShortOutDto> events = null;
-
-        for (Compilation compilation : compilations) {
-            events = getEventShort(compilation);
-        }
-
-        List<EventShortOutDto> finalEvents = events;
-        log.info("Получили все подборки");
+        log.info("Получены все подборки");
         return compilations.stream()
-                .map(c -> CompilationMapper.toCompilationDto(c, finalEvents))
+                .map(c -> CompilationMapper.toCompilationDto(c, getEventShort(c)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CompilationDto findCompilationById(int compId) {
+    public CompilationDto getCompilationById(int compId) {
         Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%s was not found.", compId)));
-        List<EventShortOutDto> events = getEventShort(compilation);
-        log.info("Получили подборки с id = {}", compId);
-
-        return CompilationMapper.toCompilationDto(compilation, events);
+                .orElseThrow(() -> new CompilationNotFoundException(compId));
+        log.info("Получили подборку с id = {}", compId);
+        return CompilationMapper.toCompilationDto(compilation, getEventShort(compilation));
     }
 
     private List<EventShortOutDto> getEventShort(Compilation compilation) {
@@ -66,10 +58,5 @@ public class CompilationCommonServiceImpl implements CompilationCommonService {
                         statsClient.getViews(e.getId())))
                 .collect(Collectors.toList());
         return events;
-    }
-
-    private PageRequest pagination(int from, int size) {
-        int page = from < size ? 0 : from / size;
-        return PageRequest.of(page, size);
     }
 }

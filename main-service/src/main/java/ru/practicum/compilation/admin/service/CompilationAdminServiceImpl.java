@@ -18,8 +18,9 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.exception.model.CompilationNotFoundException;
 import ru.practicum.exception.model.ConditionsNotMet;
-import ru.practicum.exception.model.NotFoundException;
+import ru.practicum.exception.model.EventNotFoundException;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.mapper.UserMapper;
 
@@ -42,7 +43,7 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Transactional
     public CompilationDto save(NewCompilationDto newCompilation) {
         List<Event> events = newCompilation.getEvents().stream()
-                .map(this::findEventById)
+                .map(this::getEventById)
                 .collect(Collectors.toList());
 
         Compilation saveCompilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilation, events));
@@ -61,7 +62,7 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Override
     @Transactional
     public void deleteCompilation(int compId) {
-        Compilation compilation = findCompilationById(compId);
+        Compilation compilation = getCompilationById(compId);
         compilationRepository.delete(compilation);
         log.info("Подборка с id = {} удалена", compId);
     }
@@ -69,8 +70,8 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Override
     @Transactional
     public void deleteEventOfCompilation(int compId, int eventId) {
-        Compilation compilation = findCompilationById(compId);
-        Event event = findEventById(eventId);
+        Compilation compilation = getCompilationById(compId);
+        Event event = getEventById(eventId);
 
         List<Event> events = new ArrayList<>(compilation.getEvents());
         events.remove(event);
@@ -83,8 +84,8 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Override
     @Transactional
     public void addEventInCompilation(int compId, int eventId) {
-        Compilation compilation = findCompilationById(compId);
-        Event event = findEventById(eventId);
+        Compilation compilation = getCompilationById(compId);
+        Event event = getEventById(eventId);
 
         List<Event> events = new ArrayList<>(compilation.getEvents());
         events.add(event);
@@ -97,7 +98,7 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Override
     @Transactional
     public void unpinCompilation(int compId) {
-        Compilation compilation = findCompilationById(compId);
+        Compilation compilation = getCompilationById(compId);
         if (compilation.isPinned()) {
             compilation.setPinned(false);
             compilationRepository.save(compilation);
@@ -110,7 +111,7 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
     @Override
     @Transactional
     public void pinCompilation(int compId) {
-        Compilation compilation = findCompilationById(compId);
+        Compilation compilation = getCompilationById(compId);
         if (!compilation.isPinned()) {
             compilation.setPinned(true);
             compilationRepository.save(compilation);
@@ -120,14 +121,13 @@ public class CompilationAdminServiceImpl implements CompilationAdminService {
         }
     }
 
-    private Compilation findCompilationById(int id) {
+    private Compilation getCompilationById(int id) {
         return compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%s was not found.", id)));
+                .orElseThrow(() -> new CompilationNotFoundException(id));
     }
 
-    private Event findEventById(int eventId) {
+    private Event getEventById(int eventId) {
         return eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%s was not found.", eventId)));
-
+                .orElseThrow(() -> new EventNotFoundException(eventId));
     }
 }

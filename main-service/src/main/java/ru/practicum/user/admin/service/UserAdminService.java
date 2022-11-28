@@ -6,7 +6,7 @@ import ru.practicum.user.model.dto.UserOutDto;
 import java.util.List;
 
 public interface UserAdminService {
-    List<UserOutDto> findUserByConditions(int[] ids, int from, int size);
+    List<UserOutDto> getUserByConditions(int[] ids, int from, int size);
 
     UserOutDto save(NewUserRequest newUser);
 

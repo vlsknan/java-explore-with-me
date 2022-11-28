@@ -22,16 +22,16 @@ public class CategoryCommonController {
 
     //Получение категорий
     @GetMapping
-    public List<CategoryDto> findAllCategories(@RequestParam(required = false, defaultValue = "0") @PositiveOrZero int from,
-                                               @RequestParam(required = false, defaultValue = "10") @Positive int size) {
+    public List<CategoryDto> getAllCategories(@RequestParam(required = false, defaultValue = "0") @PositiveOrZero int from,
+                                              @RequestParam(required = false, defaultValue = "10") @Positive int size) {
         log.info("Получить все категории (CategoryCommonController)");
-        return service.findAll(from, size);
+        return service.getAll(from, size);
     }
 
     //Получение информации о категории по ее id
     @GetMapping("/{catId}")
-    public CategoryDto findCategoryById(@PathVariable int catId) {
-        log.info("Полоучить данные о категориис id = {} (CategoryCommonController)", catId);
-        return service.findById(catId);
+    public CategoryDto getCategoryById(@PathVariable int catId) {
+        log.info("Получить данные о категориис id = {} (CategoryCommonController)", catId);
+        return service.getById(catId);
     }
 }
