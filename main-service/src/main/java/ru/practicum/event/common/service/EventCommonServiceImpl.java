@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.practicum.enums.Status;
 import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.dto.CategoryDto;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.enums.EventSorting;
-import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
@@ -116,7 +116,7 @@ public class EventCommonServiceImpl implements EventCommonService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EventNotFoundException(id));
 
-        if (event.getState().equals(StateEvent.PUBLISHED)) {
+        if (event.getState().equals(Status.PUBLISHED)) {
             CategoryDto category = CategoryMapper.toCategoryDto(event.getCategory());
             UserShortDto initiator = UserMapper.toUserShortDto(event.getInitiator());
             log.info("Получена полная информация о событии с id = {}", id);

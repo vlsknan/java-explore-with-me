@@ -13,7 +13,7 @@ import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.enums.StateEvent;
+import ru.practicum.enums.Status;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
@@ -67,16 +67,16 @@ public class EventAdminServiceImpl implements EventAdminService {
         } else {
             startTime = LocalDateTime.parse(rangeStart, format);
         }
-        if (rangeStart == null) {
+        if (rangeEnd == null) {
             endTime = LocalDateTime.now().plusYears(20);
         } else {
             endTime = LocalDateTime.parse(rangeEnd, format);
         }
 
-        List<StateEvent> stateEvents = null;
+        List<Status> status = null;
         if (states != null) {
-            stateEvents = states.stream()
-                    .map(this::mapToState)
+            status = states.stream()
+                    .map(this::mapToStatus)
                     .collect(Collectors.toList());
         }
 
@@ -87,7 +87,7 @@ public class EventAdminServiceImpl implements EventAdminService {
             predicates.add(event.initiator.id.in(users));
         }
         if (states != null && !states.isEmpty()) {
-            predicates.add(event.state.in(stateEvents));
+            predicates.add(event.state.in(status));
         }
         if (categories != null && !categories.isEmpty()) {
             predicates.add(event.category.id.in(categories));
@@ -141,9 +141,9 @@ public class EventAdminServiceImpl implements EventAdminService {
     public EventFullOutDto publishEvent(int eventId) {
         Event event = getEventById(eventId);
 
-        if (event.getState().equals(StateEvent.PENDING)) {
+        if (event.getState().equals(Status.PENDING)) {
             if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-                event.setState(StateEvent.PUBLISHED);
+                event.setState(Status.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
                 eventRepository.save(event);
                 log.info("Событие с id = {} опубликовано", eventId);
@@ -159,9 +159,9 @@ public class EventAdminServiceImpl implements EventAdminService {
     public EventFullOutDto rejectEvent(int eventId) {
         Event event = getEventById(eventId);
 
-        if (event.getState().equals(StateEvent.PENDING)) {
+        if (event.getState().equals(Status.PENDING)) {
             if (!event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-                event.setState(StateEvent.CANCELED);
+                event.setState(Status.CANCELED);
                 eventRepository.save(event);
                 log.info("Событие с id = {} отклонено", eventId);
                 return getEventFullOutDto(event);
@@ -172,11 +172,11 @@ public class EventAdminServiceImpl implements EventAdminService {
         throw new ConditionsNotMet("Only pending events can be changed");
     }
 
-    private StateEvent mapToState(String state) {
+    private Status mapToStatus(String status) {
         try {
-            return StateEvent.valueOf(state);
+            return Status.valueOf(status);
         } catch (InvalidRequestException e) {
-            throw new InvalidRequestException(String.format("State is unsupported: %s", state));
+            throw new InvalidRequestException(String.format("State is unsupported: %s", status));
         }
     }
 

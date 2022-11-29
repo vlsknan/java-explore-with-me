@@ -4,7 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.category.model.Category;
-import ru.practicum.enums.StateEvent;
+import ru.practicum.enums.Status;
 import ru.practicum.user.model.User;
 
 import javax.persistence.*;
@@ -41,7 +41,7 @@ public class Event {
     @Column(name = "published_on")
     LocalDateTime publishedOn;
     @Enumerated(EnumType.STRING)
-    StateEvent state;
+    Status state;
     @Column(name = "location_latitude")
     float locationLatitude;
     @Column(name = "location_longitude")

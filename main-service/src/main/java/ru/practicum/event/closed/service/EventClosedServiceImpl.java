@@ -7,11 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.enums.Status;
 import ru.practicum.utility.PageUtility;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.model.mapper.CategoryMapper;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.enums.StateEvent;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.client.StatsClient;
 import ru.practicum.event.model.Event;
@@ -68,10 +68,10 @@ public class EventClosedServiceImpl implements EventClosedService {
         Event oldEvent = getEventById(updateRequest.getEventId());
         checkEventInitiator(oldEvent, initiator);
 
-        if (oldEvent.getState().equals(StateEvent.CANCELED)) {
-            oldEvent.setState(StateEvent.PENDING);
+        if (oldEvent.getState().equals(Status.CANCELED)) {
+            oldEvent.setState(Status.PENDING);
         }
-        if (oldEvent.getState().equals(StateEvent.PENDING)) {
+        if (oldEvent.getState().equals(Status.PENDING)) {
             if (updateRequest.getAnnotation() != null) {
                 oldEvent.setAnnotation(updateRequest.getAnnotation());
             }
@@ -110,7 +110,7 @@ public class EventClosedServiceImpl implements EventClosedService {
 
         if (newEvent.getEventDate() != null && newEvent.getEventDate().isAfter(LocalDateTime.now().plusHours(2))) {
             Event event = EventMapper.toEvent(newEvent, category, initiator);
-            event.setState(StateEvent.PENDING);
+            event.setState(Status.PENDING);
             Event saveEvent = eventRepository.save(event);
             log.info("Событие с id = {} создано", saveEvent.getId());
             return getEventFullOutDto(event);
@@ -135,8 +135,8 @@ public class EventClosedServiceImpl implements EventClosedService {
         Event event = getEventById(eventId);
         checkEventInitiator(event, initiator);
 
-        if (event.getState().equals(StateEvent.PENDING)) {
-            event.setState(StateEvent.CANCELED);
+        if (event.getState().equals(Status.PENDING)) {
+            event.setState(Status.CANCELED);
             Event newEvent = eventRepository.save(event);
             log.info("Событие с id = {} отменено", eventId);
             return getEventFullOutDto(newEvent);
