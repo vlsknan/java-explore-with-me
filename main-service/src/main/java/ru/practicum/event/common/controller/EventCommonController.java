@@ -25,7 +25,7 @@ public class EventCommonController {
     final EventCommonService service;
     final StatsClient statClient;
 
-    //Получение событий с возможностью фильтраций
+    //Получение  событий с возможностью фильтраций
     @GetMapping
     public List<EventShortOutDto> getFilteredEvents(@RequestParam(required = false) String text,
                                                     @RequestParam(required = false) List<Integer> categories,
