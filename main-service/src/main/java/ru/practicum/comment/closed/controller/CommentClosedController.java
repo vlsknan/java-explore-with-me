@@ -63,7 +63,7 @@ public class CommentClosedController {
         return service.updateComment(userId, eventId, comId, commentDto);
     }
 
-    //Удалить комментарий по if
+    //Удалить комментарий по id
     @DeleteMapping("/comments/{comId}")
     public ResponseEntity<HttpStatus> deleteComment(@PathVariable @Positive int userId,
                                                     @PathVariable @Positive int comId) {

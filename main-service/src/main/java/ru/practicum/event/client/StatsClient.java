@@ -50,7 +50,7 @@ public class StatsClient extends BaseClient {
                 Integer hits = 0;
                 for (Object obj : body) {
                     Integer hit = (Integer) ((LinkedHashMap) obj).get("hits");
-                    hits = hits + hit;
+                    hits += hit;
                 }
                 return hits;
             }
