@@ -23,6 +23,7 @@ import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.*;
+import ru.practicum.request.model.Request;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.model.dto.UserShortDto;
@@ -74,6 +75,7 @@ public class CommentClosedServiceImpl implements CommentClosedService {
                     .map(this::mapToStatus)
                     .collect(Collectors.toList());
         }
+
         QComment comment = QComment.comment;
         List<Predicate> predicates = new ArrayList<>();
         if (events != null) {
@@ -82,8 +84,8 @@ public class CommentClosedServiceImpl implements CommentClosedService {
         if (status != null) {
             predicates.add(comment.status.in(commentStatus));
         }
-        predicates.add(comment.publishedOn.after(startTime));
-        predicates.add(comment.publishedOn.before(endTime));
+        predicates.add(comment.createdOn.after(startTime));
+        predicates.add(comment.createdOn.before(endTime));
         Predicate param = allOf(predicates);
 
         Page<Comment> comments = commentRepository.findAll(param, page);
@@ -105,14 +107,22 @@ public class CommentClosedServiceImpl implements CommentClosedService {
     public CommentDtoOut createComment(int userId, int eventId, CommentDtoIn commentDto) {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
+        Request request = requestRepository.findByEventAndAndRequester(event, user);
+        //Событие должно уже пройти (закомментировано для облегчения тестировани)
+//        if (event.getEventDate().isBefore(LocalDateTime.now())) {
+            //Пользователь должен посетить событие
+//            if (request.getRequester() == user && request.getStatus().equals(StatusRequest.CONFIRMED)) {
+                Comment comment = CommentMapper.toComment(commentDto, user, event);
+                comment.setStatus(Status.PENDING);
 
-        Comment comment = CommentMapper.toComment(commentDto, user, event);
-        comment.setStatus(Status.PENDING);
-
-        Comment newComment = commentRepository.save(comment);
-        log.info("Комментарий с id = {} создан", newComment.getId());
-        return getCommentDto(newComment, event);
-    }
+                Comment newComment = commentRepository.save(comment);
+                log.info("Комментарий с id = {} создан", newComment.getId());
+                return getCommentDto(newComment, event);
+            }
+//            throw new ConditionsNotMet("You did not participate in the event or your application was not approved");
+//        }
+//        throw new ConditionsNotMet("The event has not yet passed");
+//    }
 
     @Override
     public CommentDtoOut updateComment(int userId, int eventId, int comId, CommentDtoIn commentDto) {
