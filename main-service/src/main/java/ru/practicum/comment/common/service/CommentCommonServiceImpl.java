@@ -19,6 +19,7 @@ import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.event.model.mapper.EventMapper;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.model.CommentNotFoundException;
+import ru.practicum.exception.model.ConditionsNotMet;
 import ru.practicum.exception.model.EventNotFoundException;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.dto.UserShortDto;
@@ -56,6 +57,10 @@ public class CommentCommonServiceImpl implements CommentCommonService {
         Event event = getEventById(eventId);
         Comment comment = commentRepository.findById(comId)
                 .orElseThrow(() -> new CommentNotFoundException(comId));
+        if (comment.getEvent() != event) {
+            throw new ConditionsNotMet(String.format("Comment with id = %s not related to event with id = %s",
+                    comId, eventId));
+        }
         log.info("Получен комментарий с id = {}", comId);
         return getCommentDto(comment, event);
     }

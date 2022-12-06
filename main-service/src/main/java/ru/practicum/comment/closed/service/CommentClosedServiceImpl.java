@@ -99,6 +99,9 @@ public class CommentClosedServiceImpl implements CommentClosedService {
     public CommentDtoOut getCommentById(int userId, int comId) {
         User user = getUserById(userId);
         Comment comment = getCommentById(comId);
+        if (comment.getUser() != user) {
+            throw new ConditionsNotMet("You are not the author of the comment");
+        }
         log.info("Получен комментарий с id = {}", comId);
         return getCommentDto(comment, comment.getEvent());
     }
@@ -107,11 +110,11 @@ public class CommentClosedServiceImpl implements CommentClosedService {
     public CommentDtoOut createComment(int userId, int eventId, CommentDtoIn commentDto) {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
-        Request request = requestRepository.findByEventAndAndRequester(event, user);
+        Request request = requestRepository.findByEventAndRequester(event, user);
         //Событие должно уже пройти (закомментировано для облегчения тестировани)
 //        if (event.getEventDate().isBefore(LocalDateTime.now())) {
             //Пользователь должен посетить событие
-//            if (request.getRequester() == user && request.getStatus().equals(StatusRequest.CONFIRMED)) {
+//            if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
                 Comment comment = CommentMapper.toComment(commentDto, user, event);
                 comment.setStatus(Status.PENDING);
 
@@ -129,6 +132,10 @@ public class CommentClosedServiceImpl implements CommentClosedService {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
         Comment comment = getCommentById(comId);
+        if (comment.getUser() != user || comment.getEvent() != event) {
+            throw new ConditionsNotMet(String.format("The user or event is not related to the comment " +
+                    "with id = %s", comId));
+        }
 
         if (comment.getStatus().equals(Status.PUBLISHED)) {
             //Комментарий можно отредактировать в течении 2 дней после публикации
@@ -147,6 +154,9 @@ public class CommentClosedServiceImpl implements CommentClosedService {
     public void deleteComment(int userId, int comId) {
         User user = getUserById(userId);
         Comment comment = getCommentById(comId);
+        if (comment.getUser() != user) {
+            throw new ConditionsNotMet("You are not the author of the comment");
+        }
         commentRepository.delete(comment);
     }
 

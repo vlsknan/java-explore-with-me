@@ -101,12 +101,15 @@ public class CommentAdminServiceImpl implements CommentAdminService {
     public CommentDtoOut publishComment(int eventId, int comId) {
         Event event = getEventById(eventId);
         Comment comment = getCommentById(comId);
-
+        if (comment.getEvent() != event) {
+            throw new ConditionsNotMet(String.format("Comment with id = %s not related to event with id = %s",
+                    comId, eventId));
+        }
         if (comment.getStatus().equals(Status.PENDING)) {
             comment.setStatus(Status.PUBLISHED);
             comment.setPublishedOn(LocalDateTime.now());
             commentRepository.save(comment);
-            log.info("Комментариц с id = {} опубликован", comId);
+            log.info("Комментарий с id = {} опубликован", comId);
             return getCommentDto(comment, event);
         }
         throw new ConditionsNotMet(String.format("Comment already has status %s", comment.getStatus()));
@@ -117,11 +120,14 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         Event event = getEventById(eventId);
         Comment comment = getCommentById(comId);
 
+        if (comment.getEvent() != event) {
+            throw new ConditionsNotMet(String.format("Comment with id = %s not related to event with id = %s",
+                    comId, eventId));
+        }
         if (comment.getStatus().equals(Status.PENDING)) {
             comment.setStatus(Status.CANCELED);
-            comment.setPublishedOn(LocalDateTime.now());
             commentRepository.save(comment);
-            log.info("Комментариц с id = {} отклонен", comId);
+            log.info("Комментарий с id = {} отклонен", comId);
             return getCommentDto(comment, event);
         }
         throw new ConditionsNotMet(String.format("Comment already has status %s", comment.getStatus()));
