@@ -20,8 +20,8 @@ public class StatsController {
     //Сохранение информации о том, что к эндпоинту был запрос
     @PostMapping("/hit")
     public ResponseEntity<HttpStatus> saveInfo(@RequestBody EndpointHit endpointHit) {
-        statService.save(endpointHit);
         log.info("Сохранить информацию о том что к эндпоинты был запрос (StatsController)");
+        statService.save(endpointHit);
         return ResponseEntity.ok().build();
     }
 
@@ -30,7 +30,7 @@ public class StatsController {
     public List<ViewStats> findStat(@RequestParam String start,
                                     @RequestParam String end,
                                     @RequestParam(required = false) String[] uris,
-                                    @RequestParam(defaultValue = "false") boolean unique) {
+                                    @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Получить статистику по посещениям (StatsController)");
         return statService.findStat(start, end, uris, unique);
     }

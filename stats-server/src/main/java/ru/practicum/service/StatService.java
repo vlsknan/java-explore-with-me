@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.model.EndpointHit;
-import ru.practicum.model.Mapper;
 import ru.practicum.model.ViewStats;
 import ru.practicum.repository.StatRepository;
 
@@ -14,8 +13,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -35,7 +34,7 @@ public class StatService {
     uris - Список uri для которых нужно выгрузить статистику
     unique - Нужно ли учитывать только уникальные посещения (только с уникальным ip)
      */
-    public List<ViewStats> findStat(String start, String end, String[] uris, boolean unique) {
+    public List<ViewStats> findStat(String start, String end, String[] uris, Boolean unique) {
         LocalDateTime startTime = LocalDateTime.parse(
                 URLDecoder.decode(start, StandardCharsets.UTF_8),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -45,23 +44,22 @@ public class StatService {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         );
 
-        List<EndpointHit> endpointHits;
-        if (unique) {
-            if (uris != null) {
-                endpointHits = statRepository.findAllUniqueByUri(startTime, endTime, uris);
+        List<EndpointHit> endpointHits = statRepository.findAllByTimestampBetweenAndUriIn(startTime, endTime, uris);
+
+        List<ViewStats> viewStats = new ArrayList<>();
+        for (EndpointHit hit : endpointHits) {
+            Integer hitCount;
+            if (unique) {
+                hitCount = statRepository.findHitCountByUriWithUniqueIp(hit.getUri());
             } else {
-                endpointHits = statRepository.findAllUnique(startTime, endTime);
+                hitCount = statRepository.findHitCountByUri(hit.getUri());
             }
-        } else {
-            if (uris != null) {
-                endpointHits = statRepository.findAllNoUniqueByUri(startTime, endTime, uris);
-            } else {
-                endpointHits = statRepository.findAllNoUnique(startTime, endTime);
-            }
+            viewStats.add(ViewStats.builder()
+                    .app(hit.getApp())
+                    .uri(hit.getUri())
+                    .hits(hitCount).build());
         }
         log.info("Получена статистика по посещениям");
-        return endpointHits.stream()
-                .map(Mapper::toViewStats)
-                .collect(Collectors.toList());
+        return viewStats;
     }
 }

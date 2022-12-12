@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.enums.StateEvent;
+import ru.practicum.enums.Status;
 import ru.practicum.enums.StatusRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
@@ -79,7 +79,7 @@ public class UserClosedServiceImpl implements UserClosedService {
     }
 
     private void checkParamEvent(Event event, int userId) {
-        if (!event.getState().equals(StateEvent.PUBLISHED)) {
+        if (!event.getState().equals(Status.PUBLISHED)) {
             throw new ConditionsNotMet(String.format("Event with i=%s not published", event.getId()));
         }
         if (requestRepository.existsByRequesterIdAndEventId(userId, event.getId())) {

@@ -25,7 +25,7 @@ public class EventCommonController {
     final EventCommonService service;
     final StatsClient statClient;
 
-    //Получение событий с возможностью фильтраций
+    //Получение  событий с возможностью фильтраций
     @GetMapping
     public List<EventShortOutDto> getFilteredEvents(@RequestParam(required = false) String text,
                                                     @RequestParam(required = false) List<Integer> categories,
@@ -37,17 +37,19 @@ public class EventCommonController {
                                                     @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                     @RequestParam(defaultValue = "10") @Positive int size,
                                                     HttpServletRequest request) {
-        statClient.sentStat(request);
         log.info("Получить события с фильтрацией (EventCommonController)");
-        return service.getFilteredEvents(text, categories, paid, rangeStart,
+        List<EventShortOutDto> eventShortOutDtos = service.getFilteredEvents(text, categories, paid, rangeStart,
                 rangeEnd, onlyAvailable, sort, from, size);
+        statClient.sentStat(request);
+        return eventShortOutDtos;
     }
 
     //Получение подробной информации об опубликованном событии по его id
     @GetMapping("/{id}")
     public EventFullOutDto findEventById(@PathVariable @Positive int id, HttpServletRequest request) {
-        statClient.sentStat(request);
         log.info("Получить полную информацию о событии с id = {} (EventCommonController)", id);
-        return service.getEventById(id);
+        EventFullOutDto eventFullOutDto = service.getEventById(id);
+        statClient.sentStat(request);
+        return eventFullOutDto;
     }
 }
