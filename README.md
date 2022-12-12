@@ -1,5 +1,3 @@
-PR: https://github.com/vlsknan/java-explore-with-me/pull/2
-
 # Дипломный проект курса Java-разработчик
 
 ## Explore-with-me
