@@ -111,10 +111,10 @@ public class CommentClosedServiceImpl implements CommentClosedService {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
         Request request = requestRepository.findByEventAndRequester(event, user);
-        //Событие должно уже пройти (закомментировано для облегчения тестировани)
-//        if (event.getEventDate().isBefore(LocalDateTime.now())) {
+        //Событие должно уже пройти
+        if (event.getEventDate().isBefore(LocalDateTime.now())) {
             //Пользователь должен посетить событие
-//            if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
+            if (request.getStatus().equals(StatusRequest.CONFIRMED)) {
                 Comment comment = CommentMapper.toComment(commentDto, user, event);
                 comment.setStatus(Status.PENDING);
 
@@ -122,10 +122,10 @@ public class CommentClosedServiceImpl implements CommentClosedService {
                 log.info("Комментарий с id = {} создан", newComment.getId());
                 return getCommentDto(newComment, event);
             }
-//            throw new ConditionsNotMet("You did not participate in the event or your application was not approved");
-//        }
-//        throw new ConditionsNotMet("The event has not yet passed");
-//    }
+            throw new ConditionsNotMet("You did not participate in the event or your application was not approved");
+        }
+        throw new ConditionsNotMet("The event has not yet passed");
+    }
 
     @Override
     public CommentDtoOut updateComment(int userId, int eventId, int comId, CommentDtoIn commentDto) {

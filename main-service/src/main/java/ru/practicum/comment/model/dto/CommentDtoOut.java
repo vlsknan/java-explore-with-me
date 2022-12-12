@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.enums.Status;
 import ru.practicum.event.model.dto.EventShortOutDto;
 import ru.practicum.user.model.dto.UserShortDto;
 
@@ -20,4 +21,5 @@ public class CommentDtoOut {
     LocalDateTime publishedOn;
     EventShortOutDto event;
     UserShortDto user;
+    Status status;
 }

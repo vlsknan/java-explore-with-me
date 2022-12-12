@@ -61,6 +61,9 @@ public class CommentCommonServiceImpl implements CommentCommonService {
             throw new ConditionsNotMet(String.format("Comment with id = %s not related to event with id = %s",
                     comId, eventId));
         }
+        if (!comment.getStatus().equals(Status.PUBLISHED)) {
+            throw new ConditionsNotMet("Comment not published");
+        }
         log.info("Получен комментарий с id = {}", comId);
         return getCommentDto(comment, event);
     }

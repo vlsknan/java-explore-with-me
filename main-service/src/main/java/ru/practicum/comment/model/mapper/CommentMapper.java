@@ -27,6 +27,7 @@ public class CommentMapper {
                 .event(event)
                 .user(user)
                 .publishedOn(comment.getPublishedOn())
+                .status(comment.getStatus())
                 .build();
     }
 }
